@@ -79,7 +79,7 @@ export default function MusicPortfolioSite() {
     comingSoon: true,
   }))];
 
-  const audioRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const isInitialLoad = useRef(true);
 
   const [currentTrack, setCurrentTrack] = useState(featuredTrack);
@@ -386,11 +386,12 @@ export default function MusicPortfolioSite() {
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Contact</p>
               <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">For collaborations, purchasing, or producing</h3>
+              <p className="mt-4 text-sm text-neutral-400">Credits to @Smileralt on discord — DM for any inquiries</p>
             </div>
             <div className="space-y-3 text-sm text-neutral-400">
               <p>
                 <a
-                  href="mailto:prodjoeski@gmail.com?subject=Beat%20Purchase&body=Hi%20Joeski,%20I'm%20interested%20in%20buying%20a%20beat."
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=prodjoeski@gmail.com&su=Beat%20Purchase&body=Hi%20Joeski,%20I%27m%20interested%20in%20buying%20a%20beat."
                   className="hover:text-white transition"
                 >
                   Email — prodjoeski@gmail.com
