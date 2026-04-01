@@ -2,8 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+type Track = {
+  name: string;
+  description: string;
+  src: string;
+  comingSoon?: boolean;
+};
+
 export default function MusicPortfolioSite() {
-  const allTracks = useMemo(
+  const allTracks = useMemo<Track[]>(
     () => [
       {
         name: "emin 155 @prod.joeski",
@@ -71,18 +78,21 @@ export default function MusicPortfolioSite() {
 
   const featuredTrack =
     allTracks.find((track) => track.name === "LOVE 162 D MAJ @JOESKI7") || allTracks[0];
-  const latestReleaseCards = allTracks.slice(0, 4);
-  const musicSlots = [...allTracks, ...Array.from({ length: 8 }, (_, i) => ({
-    name: `Coming Soon`,
-    description: "Coming soon.",
-    src: "",
-    comingSoon: true,
-  }))];
+
+  const musicSlots: Track[] = [
+    ...allTracks,
+    ...Array.from({ length: 8 }, () => ({
+      name: "Coming Soon",
+      description: "Coming soon.",
+      src: "",
+      comingSoon: true,
+    })),
+  ];
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isInitialLoad = useRef(true);
 
-  const [currentTrack, setCurrentTrack] = useState(featuredTrack);
+  const [currentTrack, setCurrentTrack] = useState<Track>(featuredTrack);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -133,7 +143,7 @@ export default function MusicPortfolioSite() {
       .catch(() => setIsPlaying(false));
   }, [currentTrack]);
 
-  const formatTime = (time) => {
+  const formatTime = (time: number): string => {
     if (!Number.isFinite(time) || time <= 0) return "0:00";
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60)
@@ -142,12 +152,12 @@ export default function MusicPortfolioSite() {
     return `${minutes}:${seconds}`;
   };
 
-  const getTrackProgress = (track) => {
+  const getTrackProgress = (track: Track): number => {
     if (!track?.src || currentTrack?.name !== track.name || !duration) return 0;
     return Math.min((currentTime / duration) * 100, 100);
   };
 
-  const toggleTrack = async (track) => {
+  const toggleTrack = async (track: Track): Promise<void> => {
     const audio = audioRef.current;
     if (!audio || !track?.src) return;
 
@@ -171,7 +181,7 @@ export default function MusicPortfolioSite() {
     setCurrentTrack(track);
   };
 
-  const ProgressBar = ({ track }) => (
+  const ProgressBar = ({ track }: { track: Track }) => (
     <div className="mt-4 w-full">
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
         <div
@@ -198,18 +208,16 @@ export default function MusicPortfolioSite() {
           </div>
           <nav className="hidden gap-6 text-sm text-neutral-400 md:flex">
             <a href="#music" className="transition hover:text-white">Music</a>
-            
             <a href="#contact" className="transition hover:text-white">Contact</a>
           </nav>
         </header>
 
         <section className="grid gap-10 py-16 lg:grid-cols-[1.4fr_0.9fr] lg:items-end">
           <div>
-            
             <h2 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-              Joeski's music portfolio with all his best produces and collabs
+              Joeski&apos;s music portfolio with all his best produces and collabs
             </h2>
-            
+
             <div className="mt-8 flex flex-wrap gap-4">
               <a
                 href="#music"
@@ -257,7 +265,7 @@ export default function MusicPortfolioSite() {
                 </div>
 
                 <button
-                  onClick={() => toggleTrack(featuredTrack)}
+                  onClick={() => void toggleTrack(featuredTrack)}
                   className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white text-black transition hover:scale-105"
                   aria-label={isPlaying && currentTrack?.name === featuredTrack.name ? "Pause featured track" : "Play featured track"}
                 >
@@ -281,8 +289,6 @@ export default function MusicPortfolioSite() {
             </div>
           </div>
         </section>
-
-        
 
         <section id="music" className="py-8">
           <div className="mb-8 flex items-end justify-between gap-4">
@@ -317,7 +323,11 @@ export default function MusicPortfolioSite() {
                       {isActive && duration ? formatTime(duration) : isComingSoon ? "--:--" : "MP3"}
                     </span>
                     <button
-                      onClick={() => !isComingSoon && toggleTrack(track)}
+                      onClick={() => {
+                        if (!isComingSoon) {
+                          void toggleTrack(track);
+                        }
+                      }}
                       className="rounded-full border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={isComingSoon}
                     >
@@ -351,13 +361,15 @@ export default function MusicPortfolioSite() {
                   className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition hover:border-neutral-700"
                 >
                   <div className="relative flex h-40 w-40 items-center justify-center">
-                    <div className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${
-                      isPlaying && currentTrack?.name === release.name ? "animate-spin [animation-duration:8s]" : ""
-                    }`} />
+                    <div
+                      className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${
+                        isPlaying && currentTrack?.name === release.name ? "animate-spin [animation-duration:8s]" : ""
+                      }`}
+                    />
                     <div className="absolute h-28 w-28 rounded-full border border-neutral-800 bg-neutral-900" />
                     <div className="absolute h-4 w-4 rounded-full bg-neutral-950 border border-neutral-700" />
                     <button
-                      onClick={() => toggleTrack(release)}
+                      onClick={() => void toggleTrack(release)}
                       className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition group-hover:scale-105"
                       aria-label={`Play ${release.name}`}
                     >
