@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 type Track = {
   name: string;
@@ -90,58 +90,11 @@ export default function MusicPortfolioSite() {
   ];
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isInitialLoad = useRef(true);
 
   const [currentTrack, setCurrentTrack] = useState<Track>(featuredTrack);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime || 0);
-    const handleLoadedMetadata = () => setDuration(audio.duration || 0);
-    const handleEnded = () => setIsPlaying(false);
-    const handleError = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-      setDuration(0);
-    };
-
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-    audio.addEventListener("ended", handleEnded);
-    audio.addEventListener("error", handleError);
-
-    return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("ended", handleEnded);
-      audio.removeEventListener("error", handleError);
-    };
-  }, []);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !currentTrack?.src) return;
-
-    audio.src = currentTrack.src;
-    audio.load();
-    setCurrentTime(0);
-    setDuration(0);
-
-    if (isInitialLoad.current) {
-      isInitialLoad.current = false;
-      return;
-    }
-
-    audio
-      .play()
-      .then(() => setIsPlaying(true))
-      .catch(() => setIsPlaying(false));
-  }, [currentTrack]);
 
   const formatTime = (time: number): string => {
     if (!Number.isFinite(time) || time <= 0) return "0:00";
@@ -152,16 +105,16 @@ export default function MusicPortfolioSite() {
     return `${minutes}:${seconds}`;
   };
 
-  const getTrackProgress = (track: Track): number => {
-    if (!track?.src || currentTrack?.name !== track.name || !duration) return 0;
+  const progressFor = (track: Track): number => {
+    if (currentTrack.name !== track.name || !duration) return 0;
     return Math.min((currentTime / duration) * 100, 100);
   };
 
-  const toggleTrack = async (track: Track): Promise<void> => {
+  const playTrack = async (track: Track) => {
     const audio = audioRef.current;
-    if (!audio || !track?.src) return;
+    if (!audio || !track.src) return;
 
-    const sameTrack = currentTrack?.name === track.name;
+    const sameTrack = currentTrack.name === track.name;
 
     if (sameTrack) {
       if (isPlaying) {
@@ -171,14 +124,27 @@ export default function MusicPortfolioSite() {
         try {
           await audio.play();
           setIsPlaying(true);
-        } catch {
+        } catch (error) {
+          console.error("Playback failed", error);
           setIsPlaying(false);
         }
       }
       return;
     }
 
-    setCurrentTrack(track);
+    try {
+      audio.pause();
+      audio.src = track.src;
+      audio.load();
+      setCurrentTrack(track);
+      setCurrentTime(0);
+      setDuration(0);
+      await audio.play();
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Track switch failed", error);
+      setIsPlaying(false);
+    }
   };
 
   const ProgressBar = ({ track }: { track: Track }) => (
@@ -186,19 +152,33 @@ export default function MusicPortfolioSite() {
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
         <div
           className="h-full rounded-full bg-white transition-all duration-300"
-          style={{ width: `${getTrackProgress(track)}%` }}
+          style={{ width: `${progressFor(track)}%` }}
         />
       </div>
       <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-        <span>{currentTrack?.name === track.name ? formatTime(currentTime) : "0:00"}</span>
-        <span>{currentTrack?.name === track.name && duration ? formatTime(duration) : "--:--"}</span>
+        <span>{currentTrack.name === track.name ? formatTime(currentTime) : "0:00"}</span>
+        <span>{currentTrack.name === track.name && duration ? formatTime(duration) : "--:--"}</span>
       </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      <audio ref={audioRef} preload="metadata" />
+      <audio
+        ref={audioRef}
+        preload="metadata"
+        src={featuredTrack.src}
+        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime || 0)}
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+        onEnded={() => setIsPlaying(false)}
+        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onError={() => {
+          setIsPlaying(false);
+          setCurrentTime(0);
+          setDuration(0);
+        }}
+      />
 
       <div className="mx-auto flex max-w-6xl flex-col px-6 py-8 sm:px-8 lg:px-12">
         <header className="flex items-center justify-between border-b border-neutral-800 pb-6">
@@ -242,19 +222,19 @@ export default function MusicPortfolioSite() {
               </div>
               <span
                 className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.25em] ${
-                  isPlaying && currentTrack?.name === featuredTrack.name
+                  isPlaying && currentTrack.name === featuredTrack.name
                     ? "border-red-500/60 bg-red-500/10 text-red-400"
                     : "border-neutral-700 text-neutral-400"
                 }`}
               >
-                {isPlaying && currentTrack?.name === featuredTrack.name ? "playing" : "live"}
+                {isPlaying && currentTrack.name === featuredTrack.name ? "playing" : "live"}
               </span>
             </div>
             <div className="pt-5">
               <div className="relative flex aspect-square items-center justify-center rounded-[1.5rem] border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-950">
                 <div
-                  className={`flex h-48 w-48 items-center justify-center rounded-full border border-neutral-700 bg-neutral-950/70 shadow-2xl shadow-black/30 ${
-                    isPlaying && currentTrack?.name === featuredTrack.name ? "animate-spin [animation-duration:8s]" : ""
+                  className={`relative flex h-48 w-48 items-center justify-center rounded-full border border-neutral-700 bg-neutral-950/70 shadow-2xl shadow-black/30 ${
+                    isPlaying && currentTrack.name === featuredTrack.name ? "animate-spin [animation-duration:8s]" : ""
                   }`}
                 >
                   <div className="relative h-40 w-40 rounded-full border border-neutral-800 bg-neutral-900">
@@ -265,11 +245,11 @@ export default function MusicPortfolioSite() {
                 </div>
 
                 <button
-                  onClick={() => void toggleTrack(featuredTrack)}
+                  onClick={() => void playTrack(featuredTrack)}
                   className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white text-black transition hover:scale-105"
-                  aria-label={isPlaying && currentTrack?.name === featuredTrack.name ? "Pause featured track" : "Play featured track"}
+                  aria-label={isPlaying && currentTrack.name === featuredTrack.name ? "Pause featured track" : "Play featured track"}
                 >
-                  {isPlaying && currentTrack?.name === featuredTrack.name ? (
+                  {isPlaying && currentTrack.name === featuredTrack.name ? (
                     <div className="flex gap-1">
                       <span className="h-4 w-1.5 rounded-sm bg-black" />
                       <span className="h-4 w-1.5 rounded-sm bg-black" />
@@ -299,13 +279,13 @@ export default function MusicPortfolioSite() {
           </div>
 
           <div className="space-y-4">
-            {musicSlots.map((track, i) => {
+            {musicSlots.map((track, index) => {
               const isComingSoon = track.comingSoon;
-              const isActive = currentTrack?.name === track.name;
+              const isActive = currentTrack.name === track.name;
 
               return (
                 <div
-                  key={track.name + i}
+                  key={`${track.name}-${index}`}
                   className="grid gap-5 rounded-[1.75rem] border border-neutral-800 bg-neutral-900/40 p-5 transition hover:border-neutral-700 sm:grid-cols-[1.2fr_2fr_auto] sm:items-center"
                 >
                   <div>
@@ -325,7 +305,7 @@ export default function MusicPortfolioSite() {
                     <button
                       onClick={() => {
                         if (!isComingSoon) {
-                          void toggleTrack(track);
+                          void playTrack(track);
                         }
                       }}
                       className="rounded-full border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -363,17 +343,17 @@ export default function MusicPortfolioSite() {
                   <div className="relative flex h-40 w-40 items-center justify-center">
                     <div
                       className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${
-                        isPlaying && currentTrack?.name === release.name ? "animate-spin [animation-duration:8s]" : ""
+                        isPlaying && currentTrack.name === release.name ? "animate-spin [animation-duration:8s]" : ""
                       }`}
                     />
                     <div className="absolute h-28 w-28 rounded-full border border-neutral-800 bg-neutral-900" />
                     <div className="absolute h-4 w-4 rounded-full bg-neutral-950 border border-neutral-700" />
                     <button
-                      onClick={() => void toggleTrack(release)}
+                      onClick={() => void playTrack(release)}
                       className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition group-hover:scale-105"
                       aria-label={`Play ${release.name}`}
                     >
-                      {isPlaying && currentTrack?.name === release.name ? (
+                      {isPlaying && currentTrack.name === release.name ? (
                         <div className="flex gap-1">
                           <span className="h-4 w-1.5 rounded-sm bg-black" />
                           <span className="h-4 w-1.5 rounded-sm bg-black" />
