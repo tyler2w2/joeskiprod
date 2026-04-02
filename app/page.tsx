@@ -56,7 +56,7 @@ function ProgressBar({
         }}
         disabled={!active || !duration}
         className="w-full"
-      />
+      </div>
       <div className="mt-1 flex justify-between text-xs text-neutral-500">
         <span>{active ? formatTime(currentTime) : "0:00"}</span>
         <span>{active && duration ? formatTime(duration) : "--:--"}</span>
