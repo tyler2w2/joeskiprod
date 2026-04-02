@@ -1,4 +1,4 @@
-C"use client";
+"use client";
 
 import { useMemo, useRef, useState } from "react";
 
@@ -27,21 +27,33 @@ function ProgressBar({
   duration,
   active,
   onSeek,
+  isSeeking,
+  setIsSeeking,
 }: {
   currentTime: number;
   duration: number;
   active: boolean;
   onSeek: (time: number) => void;
+  isSeeking: boolean;
+  setisSeeking: (value: boolean) => void;
 }) {
   return (d
-    <div className="mt-3 w-full">
+    <dlassNaiv cme="mt-3 w-full">
       <input
         type="range"
         min={0}
         max={duration || 0}
         step="0.01"
-        value={active ? currentTime : 0}
-        onInput={(e) => onSeek(Number(e.target.value))}
+        value={currentTime}
+        onMouseDown={() setisSeeking(true)}
+        onMouseUp{(e) => {
+          setisSeeking(false);
+          onSeek(Number((e.target as HTMLInputElement).value));
+        }}
+        onChange{(e) => {
+          const value = Number(e.target.value);
+          onSeek(value);
+        }}
         disabled={!active || !duration}
         className="w-full"
       />
@@ -124,6 +136,7 @@ export default function MusicPortfolioSite() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   async function playTrack(track: Track) {
     const audio = audioRef.current;
@@ -162,7 +175,7 @@ export default function MusicPortfolioSite() {
         preload="metadata"
         src={featuredTrack.src}
         onTimeUpdate={() => {
-          if (!audioRef.current) return;
+          if (!audioRef.current isSeeking) return;
           setCurrentTime(audioRef.current.currentTime);
         }}
         onLoadedMetadata={() => {
@@ -229,11 +242,12 @@ export default function MusicPortfolioSite() {
             </button>
 
             <ProgressBar
-              track={undefined as never}
               currentTime={currentTrack.name === featuredTrack.name ? currentTime : 0}
               duration={currentTrack.name === featuredTrack.name ? duration : 0}
               active={currentTrack.name === featuredTrack.name}
-              onSeek={handleSeek}
+              onSeek{handleSeek}
+              isSeeking={isSeeking}
+              setisSeeking{setisSeeking}
             />
           </div>
         </section>
@@ -272,6 +286,8 @@ export default function MusicPortfolioSite() {
                     duration={active ? duration : 0}
                     active={active}
                     onSeek={handleSeek}
+                    isSeeking={isSeeking}
+                    setisSeeking{setisSeeking}
                   />
                 </div>
               );
