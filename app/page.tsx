@@ -1,3 +1,60 @@
+tyler
+smileralt
+In voice
+
+a1ex [ٴٴٴٴ],  — 26/03/2026 23:11
+what call u in
+tyler [ACCS],  — 26/03/2026 23:11
+priv wan me to add u
+a1ex [ٴٴٴٴ],  — 26/03/2026 23:11
+sure
+tyler [ACCS],  — 29/03/2026 00:37
+Image
+im fna have the whole set soon
+ima buy both
+tyler [ACCS],  — 31/03/2026 21:55
+Image
+a1ex [ٴٴٴٴ],  — 31/03/2026 21:56
+still ass btw
+tyler [ACCS],  — 31/03/2026 21:56
+im acc goated
+when i solo que
+a1ex [ٴٴٴٴ],  — Yesterday at 00:34
+holy 5hrs 🥹
+Image
+tyler [ACCS],  — Yesterday at 00:56
+tuff
+a1ex [ٴٴٴٴ],  — Yesterday at 09:25
+Image
+tyler [ACCS],  — Yesterday at 11:30
+fairs
+a1ex [ٴٴٴٴ],  — 13:59
+yo
+yo
+u still play pet sim
+@tyler
+tyler [ACCS],  — 14:01
+nah not really yno
+think i have shit on it tho
+joeski.xyz
+check what i made f joe
+a1ex [ٴٴٴٴ],  — 14:10
+cold
+a1ex
+ started a call that lasted a few seconds. — 14:10
+a1ex [ٴٴٴٴ],  — 14:12
+Image
+tyler [ACCS],  — 14:35
+"use client";
+
+import { useMemo, useRef, useState } from "react";
+
+type Track = {
+  name: string;
+
+joe.txt
+11 KB
+a1ex [ٴٴٴٴ],  — 14:41
 "use client";
 
 import { useMemo, useRef, useState } from "react";
@@ -9,348 +66,424 @@ type Track = {
   comingSoon?: boolean;
 };
 
-const formatTime = (time: number): string => {
+function formatTime(time: number) {
   if (!Number.isFinite(time) || time <= 0) return "0:00";
   const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60).toString().padStart(2, "0");
+  const seconds = Math.floor(time % 60)
+    .toString()
+    .padStart(2, "0");
   return `${minutes}:${seconds}`;
-};
+}
 
-const trackKey = (name: string) => name.replace(/"/g, "");
+function getTrackSrc(fileName: string) {
+  return `/${encodeURIComponent(fileName)}`;  
+}
+
+function ProgressBar({
+  currentTime,
+  duration,
+  active,
+  onSeek,
+}: {
+  currentTime: number;
+  duration: number;
+  active: boolean;
+  onSeek: (time: number) => void;
+}) {
+  return (d
+    <div className="mt-3 w-full">
+      <input
+        type="range"
+        min={0}
+        max={duration || 0}
+        step="0.01"
+        value={active ? currentTime : 0}
+        onInput={(e) => onSeek(Number(e.target.value))}
+        disabled={!active || !duration}
+        className="w-full"
+      />
+      <div className="mt-1 flex justify-between text-xs text-neutral-500">
+        <span>{active ? formatTime(currentTime) : "0:00"}</span>
+        <span>{active && duration ? formatTime(duration) : "--:--"}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function MusicPortfolioSite() {
-  const allTracks = useMemo<Track[]>(
+  const tracks = useMemo<Track[]>(
     () => [
-      { name: "emin 155 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("emin 155 @prod.joeski.mp3") },
-      { name: "152eminor @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("152eminor @prod.joeski.mp3") },
-      { name: "@prod.joeski @prod.fxckmedia 148 emin star", description: "Contact me to buy.", src: "/" + encodeURIComponent("@prod.joeski @prod.fxckmedia 148 emin star.mp3") },
-      { name: "156 cmaj @joeski7 (1)", description: "Contact me to buy.", src: "/" + encodeURIComponent("156 cmaj @joeski7 (1).mp3") },
-      { name: "162 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("162 @prod.joeski.mp3") },
-      { name: "amaj 170 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("amaj 170 @prod.joeski.mp3") },
-      { name: "dminor 161 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("dminor 161 @prod.joeski.mp3") },
-      { name: "162 fminor @joeski7", description: "Contact me to buy.", src: "/" + encodeURIComponent("162 fminor @joeski7.mp3") },
-      { name: "KARTEL 159 @JOESKI7", description: "Contact me to buy.", src: "/" + encodeURIComponent("KARTEL 159 @JOESKI7.mp3") },
-      { name: "LOVE 162 D MAJ @JOESKI7", description: "Contact me to buy.", src: "/" + encodeURIComponent("LOVE 162 D MAJ @JOESKI7.mp3") },
-      { name: "OUIJA BOARD 156 @PROD.JOESKI", description: "Contact me to buy.", src: "/" + encodeURIComponent("OUIJA BOARD 156 @PROD.JOESKI.mp3") },
+      {
+        name: "emin 155 @prod.joeski",
+        description: "Dark melodic beat. DM to buy.",
+        src: getTrackSrc("emin 155 @prod.joeski.mp3"),
+      },
+      {
+        name: "152eminor @prod.joeski",
+        description: "DM to buy this one.",
+        src: getTrackSrc("152eminor @prod.joeski.mp3"),
+      },
+      {
+        name: "@prod.joeski @prod.fxckmedia 148 emin star",
+        description: "Collab beat. DM if you want it.",
+        src: getTrackSrc("@prod.joeski @prod.fxckmedia 148 emin star.mp3"),
+      },
+      {
+        name: "156 cmaj @joeski7 (1)",
+        description: "Available for purchase.",
+        src: getTrackSrc("156 cmaj @joeski7 (1).mp3"),
+      },
+      {
+        name: "162 @prod.joeski",
+        description: "Available now.",
+        src: getTrackSrc("162 @prod.joeski.mp3"),
+      },
+      {
+        name: "amaj 170 @prod.joeski",
+        description: "Fast, bright beat.",
+        src: getTrackSrc("amaj 170 @prod.joeski.mp3"),
+      },
+      {
+        name: "dminor 161 @prod.joeski",
+        description: "Available for artists.",
+        src: getTrackSrc("dminor 161 @prod.joeski.mp3"),
+      },
+      {
+        name: "162 fminor @joeski7",
+        description: "DM to buy.",
+        src: getTrackSrc("162 fminor @joeski7.mp3"),
+      },
+      {
+        name: "KARTEL 159 @JOESKI7",
+... (223 lines left)
+
+joe.txt
+11 KB
+﻿
+a1ex
+a1ex97
+ 
+ 
+ 
+https://discord.gg/600shop
+mg
+"use client";
+
+import { useMemo, useRef, useState } from "react";
+
+type Track = {
+  name: string;
+  description: string;
+  src: string;
+  comingSoon?: boolean;
+};
+
+function formatTime(time: number) {
+  if (!Number.isFinite(time) || time <= 0) return "0:00";
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
+function getTrackSrc(fileName: string) {
+  return `/${encodeURIComponent(fileName)}`;  
+}
+
+function ProgressBar({
+  currentTime,
+  duration,
+  active,
+  onSeek,
+}: {
+  currentTime: number;
+  duration: number;
+  active: boolean;
+  onSeek: (time: number) => void;
+}) {
+  return (d
+    <div className="mt-3 w-full">
+      <input
+        type="range"
+        min={0}
+        max={duration || 0}
+        step="0.01"
+        value={active ? currentTime : 0}
+        onInput={(e) => onSeek(Number(e.target.value))}
+        disabled={!active || !duration}
+        className="w-full"
+      />
+      <div className="mt-1 flex justify-between text-xs text-neutral-500">
+        <span>{active ? formatTime(currentTime) : "0:00"}</span>
+        <span>{active && duration ? formatTime(duration) : "--:--"}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function MusicPortfolioSite() {
+  const tracks = useMemo<Track[]>(
+    () => [
+      {
+        name: "emin 155 @prod.joeski",
+        description: "Dark melodic beat. DM to buy.",
+        src: getTrackSrc("emin 155 @prod.joeski.mp3"),
+      },
+      {
+        name: "152eminor @prod.joeski",
+        description: "DM to buy this one.",
+        src: getTrackSrc("152eminor @prod.joeski.mp3"),
+      },
+      {
+        name: "@prod.joeski @prod.fxckmedia 148 emin star",
+        description: "Collab beat. DM if you want it.",
+        src: getTrackSrc("@prod.joeski @prod.fxckmedia 148 emin star.mp3"),
+      },
+      {
+        name: "156 cmaj @joeski7 (1)",
+        description: "Available for purchase.",
+        src: getTrackSrc("156 cmaj @joeski7 (1).mp3"),
+      },
+      {
+        name: "162 @prod.joeski",
+        description: "Available now.",
+        src: getTrackSrc("162 @prod.joeski.mp3"),
+      },
+      {
+        name: "amaj 170 @prod.joeski",
+        description: "Fast, bright beat.",
+        src: getTrackSrc("amaj 170 @prod.joeski.mp3"),
+      },
+      {
+        name: "dminor 161 @prod.joeski",
+        description: "Available for artists.",
+        src: getTrackSrc("dminor 161 @prod.joeski.mp3"),
+      },
+      {
+        name: "162 fminor @joeski7",
+        description: "DM to buy.",
+        src: getTrackSrc("162 fminor @joeski7.mp3"),
+      },
+      {
+        name: "KARTEL 159 @JOESKI7",
+        description: "Harder sound. Available.",
+        src: getTrackSrc("KARTEL 159 @JOESKI7.mp3"),
+      },
+      {
+        name: "LOVE 162 D MAJ @JOESKI7",
+        description: "One of my favorites. Available now.",
+        src: getTrackSrc("LOVE 162 D MAJ @JOESKI7.mp3"),
+      },
+      {
+        name: "OUIJA BOARD 156 @PROD.JOESKI",
+        description: "Dark beat. DM to buy.",
+        src: getTrackSrc("OUIJA BOARD 156 @PROD.JOESKI.mp3"),
+      },
     ],
     []
   );
 
-  const featuredTrack = allTracks.find((t) => t.name === "LOVE 162 D MAJ @JOESKI7") ?? allTracks[0];
-
-  const musicSlots: Track[] = [
-    ...allTracks,
-    ...Array.from({ length: 9 }, () => ({ name: "Coming Soon", description: "Coming soon.", src: "", comingSoon: true })),
-  ];
+  const featuredTrack =
+    tracks.find((track) => track.name === "LOVE 162 D MAJ @JOESKI7") ?? tracks[0];
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentTrackRef = useRef<Track>(featuredTrack);
-  const durationRef = useRef(0);
 
   const [currentTrack, setCurrentTrack] = useState<Track>(featuredTrack);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Query all sliders / time labels for a track by data attribute
-  const getSlidersFor = (name: string) =>
-    Array.from(document.querySelectorAll<HTMLInputElement>(
-      `input[data-track-key="${CSS.escape(trackKey(name))}"]`
-    ));
-
-  const getTimeElsFor = (name: string) =>
-    Array.from(document.querySelectorAll<HTMLSpanElement>(
-      `span[data-time-key="${CSS.escape(trackKey(name))}"]`
-    ));
-
-  const updateProgress = (name: string, time: number, dur: number) => {
-    const pct = dur > 0 ? Math.min((time / dur) * 100, 100) : 0;
-    for (const s of getSlidersFor(name)) {
-      s.value = String(time);
-      s.max = String(dur || 0);
-      s.style.setProperty("--progress", `${pct}%`);
-    }
-    for (const el of getTimeElsFor(name)) {
-      el.textContent = formatTime(time);
-    }
-  };
-
-  // Audio event handlers
-  const handleTimeUpdate = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    updateProgress(currentTrackRef.current.name, audio.currentTime, durationRef.current);
-  };
-
-  const handleLoadedMetadata = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const dur = audio.duration || 0;
-    durationRef.current = dur;
-    setDuration(dur);
-    for (const s of getSlidersFor(currentTrackRef.current.name)) {
-      s.max = String(dur);
-      s.removeAttribute("disabled");
-    }
-  };
-
-  const playTrack = async (track: Track) => {
+  async function playTrack(track: Track) {
     const audio = audioRef.current;
     if (!audio || !track.src) return;
 
-    if (currentTrackRef.current.name === track.name) {
-      if (isPlaying) { audio.pause(); } else { await audio.play(); }
-      return;
+    if (currentTrack.name !== track.name) {
+      audio.src = track.src;
+      setCurrentTrack(track);
+      setCurrentTime(0);
+      setDuration(0);
+      audio.load();
     }
 
-    audio.pause();
-    updateProgress(currentTrackRef.current.name, 0, 0);
+    try {
+      if (audio.paused || currentTrack.name !== track.name) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-    audio.src = track.src;
-    audio.load();
-    currentTrackRef.current = track;
-    durationRef.current = 0;
-    setCurrentTrack(track);
-    setDuration(0);
-
-    try { await audio.play(); } catch (e) { console.error(e); }
-  };
-
-  // ProgressBar uses data attributes so DOM queries always find it
-  const ProgressBar = ({ track, isActive }: { track: Track; isActive: boolean }) => {
-    const key = trackKey(track.name);
-
-    return (
-      <div className="mt-4 w-full">
-        <input
-          type="range"
-          min={0}
-          max={isActive ? durationRef.current : 0}
-          step="0.001"
-          defaultValue={0}
-          data-track-key={key}
-          onMouseDown={() => { if (isActive && audioRef.current) audioRef.current.pause(); }}
-          onTouchStart={() => { if (isActive && audioRef.current) audioRef.current.pause(); }}
-          onChange={(e) => {
-            if (!isActive || !audioRef.current) return;
-            const t = Number(e.target.value);
-            const dur = durationRef.current;
-            const pct = dur > 0 ? Math.min((t / dur) * 100, 100) : 0;
-            for (const s of getSlidersFor(track.name)) {
-              s.value = String(t);
-              s.style.setProperty("--progress", `${pct}%`);
-            }
-            for (const el of getTimeElsFor(track.name)) el.textContent = formatTime(t);
-            audioRef.current.currentTime = t;
-          }}
-          onMouseUp={async () => { if (isActive && audioRef.current) try { await audioRef.current.play(); } catch {} }}
-          onTouchEnd={async () => { if (isActive && audioRef.current) try { await audioRef.current.play(); } catch {} }}
-          className="yt-slider h-2 w-full cursor-pointer appearance-none rounded-full"
-          style={{ ["--progress" as string]: "0%" }}
-          disabled={!isActive || !durationRef.current}
-        />
-        <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-          <span data-time-key={key}>0:00</span>
-          <span>{isActive && duration ? formatTime(duration) : "--:--"}</span>
-        </div>
-      </div>
-    );
-  };
+  function handleSeek(time: number) {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = time;
+    setCurrentTime(time);
+  }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      <style jsx global>{`
-        .yt-slider { background: transparent; }
-        .yt-slider::-webkit-slider-runnable-track {
-          height: 6px; border-radius: 9999px;
-          background: linear-gradient(to right,
-            #ffffff 0%, #ffffff var(--progress, 0%),
-            #262626 var(--progress, 0%), #262626 100%);
-        }
-        .yt-slider::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance: none;
-          width: 14px; height: 14px; border-radius: 9999px;
-          background: #ffffff; margin-top: -4px;
-          box-shadow: 0 2px 10px rgba(0,0,0,.35);
-          transition: transform .15s ease;
-        }
-        .yt-slider:hover::-webkit-slider-thumb { transform: scale(1.08); }
-        .yt-slider::-moz-range-track { height: 6px; border-radius: 9999px; background: #262626; }
-        .yt-slider::-moz-range-progress { height: 6px; border-radius: 9999px; background: #ffffff; }
-        .yt-slider::-moz-range-thumb {
-          width: 14px; height: 14px; border: 0; border-radius: 9999px;
-          background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,.35);
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-black text-white">
       <audio
         ref={audioRef}
         preload="metadata"
         src={featuredTrack.src}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => setIsPlaying(false)}
-        onPause={() => setIsPlaying(false)}
+        onTimeUpdate={() => {
+          if (!audioRef.current) return;
+          setCurrentTime(audioRef.current.currentTime);
+        }}
+        onLoadedMetadata={() => {
+          if (!audioRef.current) return;
+          setDuration(audioRef.current.duration || 0);
+        }}
         onPlay={() => setIsPlaying(true)}
-        onError={() => { setIsPlaying(false); setDuration(0); durationRef.current = 0; }}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
       />
 
-      <div className="mx-auto flex max-w-6xl flex-col px-6 py-10 sm:px-8 lg:px-12">
-        {/* Header */}
-        <header className="flex items-center justify-between border-b border-neutral-800 pb-6">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <header className="mb-12 flex items-center justify-between border-b border-neutral-800 pb-5">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Music Portfolio</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">joeski</h1>
+            <p className="text-sm text-neutral-500">beats by</p>
+            <h1 className="text-3xl font-semibold">joeski</h1>
           </div>
-          <nav className="hidden gap-6 text-sm text-neutral-400 md:flex">
-            <a href="#music" className="transition hover:text-white">Music</a>
-            <a href="#contact" className="transition hover:text-white">Contact</a>
+
+          <nav className="hidden gap-5 text-sm text-neutral-400 md:flex">
+            <a href="#music" className="hover:text-white">
+              music
+            </a>
+            <a href="#contact" className="hover:text-white">
+              contact
+            </a>
           </nav>
         </header>
 
-        {/* Hero */}
-        <section className="grid gap-12 py-20 lg:grid-cols-[1.35fr_0.95fr] lg:items-end">
+        <section className="grid gap-10 py-8 md:grid-cols-2">
           <div>
-            <h2 className="max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl">
-              Joeski&apos;s music portfolio with all his best producers and collabs
+            <h2 className="max-w-xl text-4xl font-semibold leading-tight">
+              beats, collabs, and recent drops
             </h2>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a href="#music" className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition-all duration-300 ease-out hover:-translate-y-0.5 hover:opacity-90">
-                Explore music
+            <p className="mt-4 max-w-lg text-sm leading-6 text-neutral-400">
+              A few of my tracks are up here to preview. If you want to buy one
+              or work together, hit me up.
+            </p>
+
+            <div className="mt-6 flex gap-3">
+              <a
+                href="#music"
+                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black"
+              >
+                listen
               </a>
-              <a href="#contact" className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-neutral-600 hover:bg-neutral-900/40">
-                Book / Contact
+              <a
+                href="#contact"
+                className="rounded-lg border border-neutral-700 px-4 py-2 text-sm"
+              >
+                contact
               </a>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Featured</p>
-                <h3 className="mt-2 text-xl font-medium">Latest release</h3>
-              </div>
-              <span className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.25em] ${isPlaying && currentTrack.name === featuredTrack.name ? "border-red-500/60 bg-red-500/10 text-red-400" : "border-neutral-700 text-neutral-400"}`}>
-                {isPlaying && currentTrack.name === featuredTrack.name ? "playing" : "live"}
-              </span>
-            </div>
+          <div className="rounded-2xl border border-neutral-800 p-5">
+            <p className="text-sm text-neutral-500">featured track</p>
+            <h3 className="mt-2 text-xl font-medium">{featuredTrack.name}</h3>
 
-            <div className="pt-5">
-              <div className="relative flex aspect-square items-center justify-center rounded-[1.5rem] border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-950">
-                <div className={`relative flex h-48 w-48 items-center justify-center rounded-full border border-neutral-700 bg-neutral-950/70 shadow-2xl shadow-black/30 ${isPlaying && currentTrack.name === featuredTrack.name ? "animate-spin [animation-duration:8s]" : ""}`}>
-                  <div className="relative h-40 w-40 rounded-full border border-neutral-800 bg-neutral-900">
-                    <div className="absolute left-1/2 top-4 h-8 w-1 -translate-x-1/2 rounded-full bg-neutral-600" />
-                    <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-800 bg-neutral-950/80" />
-                  </div>
-                  <div className="absolute h-5 w-5 rounded-full border border-neutral-700 bg-neutral-950" />
-                </div>
-                <button
-                  onClick={() => void playTrack(featuredTrack)}
-                  className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white text-black transition-all duration-300 ease-out hover:scale-105"
-                >
-                  {isPlaying && currentTrack.name === featuredTrack.name
-                    ? <div className="flex gap-1"><span className="h-4 w-1.5 rounded-sm bg-black" /><span className="h-4 w-1.5 rounded-sm bg-black" /></div>
-                    : <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-black" />}
-                </button>
-              </div>
-              <div className="mt-5 w-full">
-                <h4 className="text-lg font-medium">LOVE 162 D MAJ @JOESKI7</h4>
-                <ProgressBar track={featuredTrack} isActive={currentTrack.name === featuredTrack.name} />
-              </div>
-            </div>
+            <button
+              onClick={() => void playTrack(featuredTrack)}
+              className="mt-5 rounded-lg border border-neutral-700 px-4 py-2 text-sm"
+            >
+              {isPlaying && currentTrack.name === featuredTrack.name ? "Pause" : "Play"}
+            </button>
+
+            <ProgressBar
+              track={undefined as never}
+              currentTime={currentTrack.name === featuredTrack.name ? currentTime : 0}
+              duration={currentTrack.name === featuredTrack.name ? duration : 0}
+              active={currentTrack.name === featuredTrack.name}
+              onSeek={handleSeek}
+            />
           </div>
         </section>
 
-        {/* Track list */}
         <section id="music" className="py-8">
-          <div className="mb-8 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Selected works</p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Music</h3>
-            </div>
-          </div>
-          <div className="space-y-4">
-            {musicSlots.map((track, index) => {
-              const isComingSoon = !!track.comingSoon;
-              const isActive = currentTrack.name === track.name;
+          <h3 className="mb-6 text-2xl font-semibold">tracks</h3>
+
+          <div className="space-y-3">
+            {tracks.map((track) => {
+              const active = currentTrack.name === track.name;
+
               return (
-                <div key={`${track.name}-${index}`} className="grid gap-5 rounded-[1.75rem] border border-neutral-800 bg-neutral-900/40 p-5 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60 sm:grid-cols-[1.2fr_2fr_auto] sm:items-center">
-                  <div>
-                    <p className="text-sm text-neutral-500">Beat · 2026</p>
-                    <h4 className="mt-1 text-xl font-medium">{track.name}</h4>
-                  </div>
-                  <div>
-                    <p className="text-sm leading-6 text-neutral-400">{track.description}</p>
-                    <ProgressBar track={track} isActive={isActive} />
-                  </div>
-                  <div className="flex items-center gap-4 sm:justify-end">
-                    <span className="text-sm text-neutral-500">
-                      {isActive && duration ? formatTime(duration) : isComingSoon ? "--:--" : "MP3"}
-                    </span>
+                <div
+                  key={track.name}
+                  className="rounded-xl border border-neutral-800 p-4"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-sm text-neutral-500">Beat · 2026</p>
+                      <h4 className="text-lg font-medium">{track.name}</h4>
+                      <p className="mt-1 text-sm text-neutral-400">
+                        {track.description}
+                      </p>
+                    </div>
+
                     <button
-                      onClick={() => { if (!isComingSoon) void playTrack(track); }}
-                      className="rounded-full border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition-all duration-300 ease-out hover:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={isComingSoon}
+                      onClick={() => void playTrack(track)}
+                      className="rounded-lg border border-neutral-700 px-4 py-2 text-sm"
                     >
-                      {isComingSoon ? "Soon" : isPlaying && isActive ? "Pause" : "Listen"}
+                      {isPlaying && active ? "Pause" : "Play"}
                     </button>
                   </div>
+
+                  <ProgressBar
+                    currentTime={active ? currentTime : 0}
+                    duration={active ? duration : 0}
+                    active={active}
+                    onSeek={handleSeek}
+                  />
                 </div>
               );
             })}
           </div>
         </section>
 
-        {/* Archive */}
-        <section id="about" className="py-16">
-          <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
-            <div className="flex flex-col gap-6 border-b border-neutral-800 pb-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Archive</p>
-                <h3 className="mt-3 text-2xl font-semibold tracking-tight">Releases</h3>
-              </div>
-              <div className="grid gap-3 text-sm text-neutral-400 sm:grid-cols-3">
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Purchasing available</div>
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Custom production</div>
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Collabs open</div>
-              </div>
-            </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {allTracks.slice(0, 4).map((release) => (
-                <div key={`${release.name}-bottom`} className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60">
-                  <div className="relative flex h-40 w-40 items-center justify-center">
-                    <div className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${isPlaying && currentTrack.name === release.name ? "animate-spin [animation-duration:8s]" : ""}`} />
-                    <div className="absolute h-28 w-28 rounded-full border border-neutral-800 bg-neutral-900" />
-                    <div className="absolute h-4 w-4 rounded-full border border-neutral-700 bg-neutral-950" />
-                    <button onClick={() => void playTrack(release)} className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-all duration-300 ease-out group-hover:scale-105">
-                      {isPlaying && currentTrack.name === release.name
-                        ? <div className="flex gap-1"><span className="h-4 w-1.5 rounded-sm bg-black" /><span className="h-4 w-1.5 rounded-sm bg-black" /></div>
-                        : <div className="ml-1 h-0 w-0 border-y-[8px] border-l-[12px] border-y-transparent border-l-black" />}
-                    </button>
-                  </div>
-                  <h4 className="mt-5 text-center text-base font-medium">{release.name}</h4>
-                  <div className="w-full">
-                    <ProgressBar track={release} isActive={currentTrack.name === release.name} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <section id="contact" className="border-t border-neutral-800 pt-8">
+          <h3 className="text-2xl font-semibold">contact</h3>
+          <p className="mt-3 max-w-lg text-sm text-neutral-400">
+            Want to buy a beat, book production, or talk collabs? Reach out below.
+          </p>
 
-        {/* Contact */}
-        <section id="contact" className="border-t border-neutral-800 py-10">
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Contact</p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">For collaborations, purchasing, or producing</h3>
-              <p className="mt-4 text-sm text-neutral-400">Credits to @Smileralt on discord — DM for any inquiries</p>
-            </div>
-            <div className="space-y-3 text-sm text-neutral-400">
-              <p><a href="https://mail.google.com/mail/?view=cm&fs=1&to=prodjoeski@gmail.com&su=Beat%20Purchase&body=Hi%20Joeski,%20I%27m%20interested%20in%20buying%20a%20beat." className="transition hover:text-white">Email — prodjoeski@gmail.com</a></p>
-              <p><a href="https://instagram.com/prod.joeski" target="_blank" rel="noreferrer" className="transition hover:text-white">Instagram — @prod.joeski</a></p>
-              <p><a href="https://youtube.com/@prodjoeski" target="_blank" rel="noreferrer" className="transition hover:text-white">YouTube — @prodjoeski</a></p>
-              <p>Discord — joeski7</p>
-            </div>
+          <div className="mt-5 space-y-2 text-sm text-neutral-300">
+            <p>
+              <a
+                href="mailto:prodjoeski@gmail.com"
+                className="hover:text-white"
+              >
+                prodjoeski@gmail.com
+              </a>
+            </p>
+            <p>
+              <a
+                href="https://instagram.com/prod.joeski"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-white"
+              >
+                Instagram — @prod.joeski
+              </a>
+            </p>
+            <p>
+              <a
+                href="https://youtube.com/@prodjoeski"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-white"
+              >
+                YouTube — @prodjoeski
+              </a>
+            </p>
+            <p>Discord — joeski7</p>
           </div>
         </section>
       </div>
