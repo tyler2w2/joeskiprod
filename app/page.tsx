@@ -38,7 +38,7 @@ function ProgressBar({
   setisSeeking: (value: boolean) => void;
 }) {
   return (d
-    <dlassNaiv cme="mt-3 w-full">
+    <classNaiv classname="mt-3 w-full">
       <input
         type="range"
         min={0}
