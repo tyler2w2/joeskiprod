@@ -22,7 +22,7 @@ function getTrackSrc(fileName: string) {
   return `/${encodeURIComponent(fileName)}`;
 }
 
-export default function MusicPortfolioSite() {
+export default function Page() {
   const allTracks = useMemo<Track[]>(
     () => [
       {
@@ -463,7 +463,7 @@ export default function MusicPortfolioSite() {
                       }`}
                     />
                     <div className="absolute h-28 w-28 rounded-full border border-neutral-800 bg-neutral-900" />
-                    <div className="absolute h-4 w-4 rounded-full bg-neutral-950 border border-neutral-700" />
+                    <div className="absolute h-4 w-4 rounded-full border border-neutral-700 bg-neutral-950" />
 
                     <button
                       onClick={() => void playTrack(release)}
