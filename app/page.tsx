@@ -38,7 +38,7 @@ function ProgressBar({
   setisSeeking: (value: boolean) => void;
 }) {
   return (d
-    <classNaiv classname="mt-3 w-full">
+    <div classname="mt-3 w-full">
       <input
         type="range"
         min={0}
