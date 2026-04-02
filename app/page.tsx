@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 type Track = {
   name: string;
@@ -9,276 +9,147 @@ type Track = {
   comingSoon?: boolean;
 };
 
+const formatTime = (time: number): string => {
+  if (!Number.isFinite(time) || time <= 0) return "0:00";
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60).toString().padStart(2, "0");
+  return `${minutes}:${seconds}`;
+};
+
+const trackKey = (name: string) => name.replace(/"/g, "");
+
 export default function MusicPortfolioSite() {
   const allTracks = useMemo<Track[]>(
     () => [
-      {
-        name: "emin 155 @prod.joeski",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("emin 155 @prod.joeski.mp3"),
-      },
-      {
-        name: "152eminor @prod.joeski",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("152eminor @prod.joeski.mp3"),
-      },
-      {
-        name: "@prod.joeski @prod.fxckmedia 148 emin star",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent(
-          "@prod.joeski @prod.fxckmedia 148 emin star.mp3"
-        ),
-      },
-      {
-        name: "156 cmaj @joeski7 (1)",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("156 cmaj @joeski7 (1).mp3"),
-      },
-      {
-        name: "162 @prod.joeski",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("162 @prod.joeski.mp3"),
-      },
-      {
-        name: "amaj 170 @prod.joeski",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("amaj 170 @prod.joeski.mp3"),
-      },
-      {
-        name: "dminor 161 @prod.joeski",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("dminor 161 @prod.joeski.mp3"),
-      },
-      {
-        name: "162 fminor @joeski7",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("162 fminor @joeski7.mp3"),
-      },
-      {
-        name: "KARTEL 159 @JOESKI7",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("KARTEL 159 @JOESKI7.mp3"),
-      },
-      {
-        name: "LOVE 162 D MAJ @JOESKI7",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("LOVE 162 D MAJ @JOESKI7.mp3"),
-      },
-      {
-        name: "OUIJA BOARD 156 @PROD.JOESKI",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("OUIJA BOARD 156 @PROD.JOESKI.mp3"),
-      },
+      { name: "emin 155 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("emin 155 @prod.joeski.mp3") },
+      { name: "152eminor @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("152eminor @prod.joeski.mp3") },
+      { name: "@prod.joeski @prod.fxckmedia 148 emin star", description: "Contact me to buy.", src: "/" + encodeURIComponent("@prod.joeski @prod.fxckmedia 148 emin star.mp3") },
+      { name: "156 cmaj @joeski7 (1)", description: "Contact me to buy.", src: "/" + encodeURIComponent("156 cmaj @joeski7 (1).mp3") },
+      { name: "162 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("162 @prod.joeski.mp3") },
+      { name: "amaj 170 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("amaj 170 @prod.joeski.mp3") },
+      { name: "dminor 161 @prod.joeski", description: "Contact me to buy.", src: "/" + encodeURIComponent("dminor 161 @prod.joeski.mp3") },
+      { name: "162 fminor @joeski7", description: "Contact me to buy.", src: "/" + encodeURIComponent("162 fminor @joeski7.mp3") },
+      { name: "KARTEL 159 @JOESKI7", description: "Contact me to buy.", src: "/" + encodeURIComponent("KARTEL 159 @JOESKI7.mp3") },
+      { name: "LOVE 162 D MAJ @JOESKI7", description: "Contact me to buy.", src: "/" + encodeURIComponent("LOVE 162 D MAJ @JOESKI7.mp3") },
+      { name: "OUIJA BOARD 156 @PROD.JOESKI", description: "Contact me to buy.", src: "/" + encodeURIComponent("OUIJA BOARD 156 @PROD.JOESKI.mp3") },
     ],
     []
   );
 
-  const featuredTrack =
-    allTracks.find((track) => track.name === "LOVE 162 D MAJ @JOESKI7") ||
-    allTracks[0];
+  const featuredTrack = allTracks.find((t) => t.name === "LOVE 162 D MAJ @JOESKI7") ?? allTracks[0];
 
   const musicSlots: Track[] = [
     ...allTracks,
-    ...Array.from({ length: 9 }, () => ({
-      name: "Coming Soon",
-      description: "Coming soon.",
-      src: "",
-      comingSoon: true,
-    })),
+    ...Array.from({ length: 9 }, () => ({ name: "Coming Soon", description: "Coming soon.", src: "", comingSoon: true })),
   ];
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentTrackRef = useRef<Track>(featuredTrack);
+  const durationRef = useRef(0);
+
   const [currentTrack, setCurrentTrack] = useState<Track>(featuredTrack);
   const [isPlaying, setIsPlaying] = useState(false);
-  // duration is still React state since it only changes on track load
   const [duration, setDuration] = useState(0);
 
-  // Ref map: trackName -> { slider, currentTimeEl }
-  const sliderRefs = useRef<
-    Map<string, { slider: HTMLInputElement; currentTimeEl: HTMLSpanElement }>
-  >(new Map());
+  // Query all sliders / time labels for a track by data attribute
+  const getSlidersFor = (name: string) =>
+    Array.from(document.querySelectorAll<HTMLInputElement>(
+      `input[data-track-key="${CSS.escape(trackKey(name))}"]`
+    ));
 
-  const currentTrackRef = useRef(currentTrack);
-  currentTrackRef.current = currentTrack;
-  const durationRef = useRef(duration);
-  durationRef.current = duration;
+  const getTimeElsFor = (name: string) =>
+    Array.from(document.querySelectorAll<HTMLSpanElement>(
+      `span[data-time-key="${CSS.escape(trackKey(name))}"]`
+    ));
 
-  const formatTime = (time: number): string => {
-    if (!Number.isFinite(time) || time <= 0) return "0:00";
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60)
-      .toString()
-      .padStart(2, "0");
-    return `${minutes}:${seconds}`;
+  const updateProgress = (name: string, time: number, dur: number) => {
+    const pct = dur > 0 ? Math.min((time / dur) * 100, 100) : 0;
+    for (const s of getSlidersFor(name)) {
+      s.value = String(time);
+      s.max = String(dur || 0);
+      s.style.setProperty("--progress", `${pct}%`);
+    }
+    for (const el of getTimeElsFor(name)) {
+      el.textContent = formatTime(time);
+    }
   };
 
-  // Update slider + time label directly on the DOM — no React re-render needed
-  const updateSliderDOM = useCallback(
-    (trackName: string, time: number, dur: number) => {
-      const refs = sliderRefs.current.get(trackName);
-      if (!refs) return;
-      const { slider, currentTimeEl } = refs;
-      const percent = dur > 0 ? Math.min((time / dur) * 100, 100) : 0;
-      slider.value = String(time);
-      slider.max = String(dur);
-      slider.style.setProperty("--progress", `${percent}%`);
-      currentTimeEl.textContent = formatTime(time);
-    },
-    []
-  );
-
-  // On timeupdate: push progress directly to DOM, skip React state entirely
-  const handleTimeUpdate = useCallback(() => {
+  // Audio event handlers
+  const handleTimeUpdate = () => {
     const audio = audioRef.current;
     if (!audio) return;
-    const time = audio.currentTime;
-    const dur = durationRef.current;
-    updateSliderDOM(currentTrackRef.current.name, time, dur);
-  }, [updateSliderDOM]);
+    updateProgress(currentTrackRef.current.name, audio.currentTime, durationRef.current);
+  };
 
-  // When a new track loads, set the slider max and reset it
-  const handleLoadedMetadata = useCallback(() => {
+  const handleLoadedMetadata = () => {
     const audio = audioRef.current;
     if (!audio) return;
     const dur = audio.duration || 0;
-    setDuration(dur);
     durationRef.current = dur;
-    const refs = sliderRefs.current.get(currentTrackRef.current.name);
-    if (refs) {
-      refs.slider.max = String(dur);
-      refs.slider.value = "0";
-      refs.slider.style.setProperty("--progress", "0%");
-    }
-  }, []);
-
-  const playTrack = async (track: Track): Promise<void> => {
-    const audio = audioRef.current;
-    if (!audio || !track.src) return;
-
-    const sameTrack = currentTrackRef.current.name === track.name;
-
-    try {
-      if (sameTrack) {
-        if (isPlaying) {
-          audio.pause();
-        } else {
-          await audio.play();
-        }
-        return;
-      }
-
-      audio.pause();
-      // Reset old track's slider
-      updateSliderDOM(currentTrackRef.current.name, 0, 0);
-      const oldRefs = sliderRefs.current.get(currentTrackRef.current.name);
-      if (oldRefs) {
-        oldRefs.slider.max = "0";
-        oldRefs.slider.value = "0";
-        oldRefs.slider.style.setProperty("--progress", "0%");
-        oldRefs.currentTimeEl.textContent = "0:00";
-      }
-
-      audio.src = track.src;
-      audio.load();
-      setCurrentTrack(track);
-      setDuration(0);
-      durationRef.current = 0;
-      await audio.play();
-    } catch (error) {
-      console.error("Playback failed:", error);
-      setIsPlaying(false);
+    setDuration(dur);
+    for (const s of getSlidersFor(currentTrackRef.current.name)) {
+      s.max = String(dur);
+      s.removeAttribute("disabled");
     }
   };
 
-  // Register a slider+timeEl pair for a track
-  const registerSlider = useCallback(
-    (
-      trackName: string,
-      slider: HTMLInputElement | null,
-      currentTimeEl: HTMLSpanElement | null
-    ) => {
-      if (slider && currentTimeEl) {
-        sliderRefs.current.set(trackName, { slider, currentTimeEl });
-      } else {
-        sliderRefs.current.delete(trackName);
-      }
-    },
-    []
-  );
+  const playTrack = async (track: Track) => {
+    const audio = audioRef.current;
+    if (!audio || !track.src) return;
 
-  const ProgressBar = ({ track }: { track: Track }) => {
-    const isActive = currentTrack.name === track.name;
+    if (currentTrackRef.current.name === track.name) {
+      if (isPlaying) { audio.pause(); } else { await audio.play(); }
+      return;
+    }
 
-    const sliderRef = useCallback(
-      (el: HTMLInputElement | null) => {
-        const map = sliderRefs.current;
-        const existing = map.get(track.name);
-        if (el) {
-          map.set(track.name, {
-            slider: el,
-            currentTimeEl: existing?.currentTimeEl as HTMLSpanElement,
-          });
-        }
-      },
-      [track.name]
-    );
+    audio.pause();
+    updateProgress(currentTrackRef.current.name, 0, 0);
 
-    const timeRef = useCallback(
-      (el: HTMLSpanElement | null) => {
-        const map = sliderRefs.current;
-        const existing = map.get(track.name);
-        if (el) {
-          map.set(track.name, {
-            slider: existing?.slider as HTMLInputElement,
-            currentTimeEl: el,
-          });
-        }
-      },
-      [track.name]
-    );
+    audio.src = track.src;
+    audio.load();
+    currentTrackRef.current = track;
+    durationRef.current = 0;
+    setCurrentTrack(track);
+    setDuration(0);
+
+    try { await audio.play(); } catch (e) { console.error(e); }
+  };
+
+  // ProgressBar uses data attributes so DOM queries always find it
+  const ProgressBar = ({ track, isActive }: { track: Track; isActive: boolean }) => {
+    const key = trackKey(track.name);
 
     return (
       <div className="mt-4 w-full">
         <input
-          ref={sliderRef}
           type="range"
           min={0}
-          max={isActive ? duration : 0}
+          max={isActive ? durationRef.current : 0}
           step="0.001"
           defaultValue={0}
-          onMouseDown={() => {
-            if (!isActive || !audioRef.current) return;
-            audioRef.current.pause();
-          }}
-          onTouchStart={() => {
-            if (!isActive || !audioRef.current) return;
-            audioRef.current.pause();
-          }}
+          data-track-key={key}
+          onMouseDown={() => { if (isActive && audioRef.current) audioRef.current.pause(); }}
+          onTouchStart={() => { if (isActive && audioRef.current) audioRef.current.pause(); }}
           onChange={(e) => {
             if (!isActive || !audioRef.current) return;
-            const nextTime = Number(e.target.value);
+            const t = Number(e.target.value);
             const dur = durationRef.current;
-            const percent = dur > 0 ? Math.min((nextTime / dur) * 100, 100) : 0;
-            e.target.style.setProperty("--progress", `${percent}%`);
-            audioRef.current.currentTime = nextTime;
-            const refs = sliderRefs.current.get(track.name);
-            if (refs) refs.currentTimeEl.textContent = formatTime(nextTime);
+            const pct = dur > 0 ? Math.min((t / dur) * 100, 100) : 0;
+            for (const s of getSlidersFor(track.name)) {
+              s.value = String(t);
+              s.style.setProperty("--progress", `${pct}%`);
+            }
+            for (const el of getTimeElsFor(track.name)) el.textContent = formatTime(t);
+            audioRef.current.currentTime = t;
           }}
-          onMouseUp={async () => {
-            if (!isActive || !audioRef.current) return;
-            await audioRef.current.play();
-          }}
-          onTouchEnd={async () => {
-            if (!isActive || !audioRef.current) return;
-            await audioRef.current.play();
-          }}
+          onMouseUp={async () => { if (isActive && audioRef.current) try { await audioRef.current.play(); } catch {} }}
+          onTouchEnd={async () => { if (isActive && audioRef.current) try { await audioRef.current.play(); } catch {} }}
           className="yt-slider h-2 w-full cursor-pointer appearance-none rounded-full"
           style={{ ["--progress" as string]: "0%" }}
-          disabled={!isActive || !duration}
+          disabled={!isActive || !durationRef.current}
         />
-
         <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-          <span ref={timeRef}>0:00</span>
+          <span data-time-key={key}>0:00</span>
           <span>{isActive && duration ? formatTime(duration) : "--:--"}</span>
         </div>
       </div>
@@ -288,57 +159,26 @@ export default function MusicPortfolioSite() {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
       <style jsx global>{`
-        .yt-slider {
-          background: transparent;
-        }
-
+        .yt-slider { background: transparent; }
         .yt-slider::-webkit-slider-runnable-track {
-          height: 6px;
-          border-radius: 9999px;
-          background: linear-gradient(
-            to right,
-            #ffffff 0%,
-            #ffffff var(--progress, 0%),
-            #262626 var(--progress, 0%),
-            #262626 100%
-          );
+          height: 6px; border-radius: 9999px;
+          background: linear-gradient(to right,
+            #ffffff 0%, #ffffff var(--progress, 0%),
+            #262626 var(--progress, 0%), #262626 100%);
         }
-
         .yt-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 14px;
-          height: 14px;
-          border-radius: 9999px;
-          background: #ffffff;
-          margin-top: -4px;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-          transition: transform 0.15s ease;
+          -webkit-appearance: none; appearance: none;
+          width: 14px; height: 14px; border-radius: 9999px;
+          background: #ffffff; margin-top: -4px;
+          box-shadow: 0 2px 10px rgba(0,0,0,.35);
+          transition: transform .15s ease;
         }
-
-        .yt-slider:hover::-webkit-slider-thumb {
-          transform: scale(1.08);
-        }
-
-        .yt-slider::-moz-range-track {
-          height: 6px;
-          border-radius: 9999px;
-          background: #262626;
-        }
-
-        .yt-slider::-moz-range-progress {
-          height: 6px;
-          border-radius: 9999px;
-          background: #ffffff;
-        }
-
+        .yt-slider:hover::-webkit-slider-thumb { transform: scale(1.08); }
+        .yt-slider::-moz-range-track { height: 6px; border-radius: 9999px; background: #262626; }
+        .yt-slider::-moz-range-progress { height: 6px; border-radius: 9999px; background: #ffffff; }
         .yt-slider::-moz-range-thumb {
-          width: 14px;
-          height: 14px;
-          border: 0;
-          border-radius: 9999px;
-          background: #ffffff;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+          width: 14px; height: 14px; border: 0; border-radius: 9999px;
+          background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,.35);
         }
       `}</style>
 
@@ -351,51 +191,33 @@ export default function MusicPortfolioSite() {
         onEnded={() => setIsPlaying(false)}
         onPause={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
-        onError={() => {
-          setIsPlaying(false);
-          setDuration(0);
-        }}
+        onError={() => { setIsPlaying(false); setDuration(0); durationRef.current = 0; }}
       />
 
       <div className="mx-auto flex max-w-6xl flex-col px-6 py-10 sm:px-8 lg:px-12">
+        {/* Header */}
         <header className="flex items-center justify-between border-b border-neutral-800 pb-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-              Music Portfolio
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-              joeski
-            </h1>
+            <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Music Portfolio</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">joeski</h1>
           </div>
-
           <nav className="hidden gap-6 text-sm text-neutral-400 md:flex">
-            <a href="#music" className="transition hover:text-white">
-              Music
-            </a>
-            <a href="#contact" className="transition hover:text-white">
-              Contact
-            </a>
+            <a href="#music" className="transition hover:text-white">Music</a>
+            <a href="#contact" className="transition hover:text-white">Contact</a>
           </nav>
         </header>
 
+        {/* Hero */}
         <section className="grid gap-12 py-20 lg:grid-cols-[1.35fr_0.95fr] lg:items-end">
           <div>
             <h2 className="max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl">
-              Joeski&apos;s music portfolio with all his best producers and
-              collabs
+              Joeski&apos;s music portfolio with all his best producers and collabs
             </h2>
-
             <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href="#music"
-                className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition-all duration-300 ease-out hover:-translate-y-0.5 hover:opacity-90"
-              >
+              <a href="#music" className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition-all duration-300 ease-out hover:-translate-y-0.5 hover:opacity-90">
                 Explore music
               </a>
-              <a
-                href="#contact"
-                className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-neutral-600 hover:bg-neutral-900/40"
-              >
+              <a href="#contact" className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-neutral-600 hover:bg-neutral-900/40">
                 Book / Contact
               </a>
             </div>
@@ -404,130 +226,72 @@ export default function MusicPortfolioSite() {
           <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
-                  Featured
-                </p>
+                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Featured</p>
                 <h3 className="mt-2 text-xl font-medium">Latest release</h3>
               </div>
-
-              <span
-                className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.25em] ${
-                  isPlaying && currentTrack.name === featuredTrack.name
-                    ? "border-red-500/60 bg-red-500/10 text-red-400"
-                    : "border-neutral-700 text-neutral-400"
-                }`}
-              >
-                {isPlaying && currentTrack.name === featuredTrack.name
-                  ? "playing"
-                  : "live"}
+              <span className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.25em] ${isPlaying && currentTrack.name === featuredTrack.name ? "border-red-500/60 bg-red-500/10 text-red-400" : "border-neutral-700 text-neutral-400"}`}>
+                {isPlaying && currentTrack.name === featuredTrack.name ? "playing" : "live"}
               </span>
             </div>
 
             <div className="pt-5">
               <div className="relative flex aspect-square items-center justify-center rounded-[1.5rem] border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-950">
-                <div
-                  className={`relative flex h-48 w-48 items-center justify-center rounded-full border border-neutral-700 bg-neutral-950/70 shadow-2xl shadow-black/30 ${
-                    isPlaying && currentTrack.name === featuredTrack.name
-                      ? "animate-spin [animation-duration:8s]"
-                      : ""
-                  }`}
-                >
+                <div className={`relative flex h-48 w-48 items-center justify-center rounded-full border border-neutral-700 bg-neutral-950/70 shadow-2xl shadow-black/30 ${isPlaying && currentTrack.name === featuredTrack.name ? "animate-spin [animation-duration:8s]" : ""}`}>
                   <div className="relative h-40 w-40 rounded-full border border-neutral-800 bg-neutral-900">
                     <div className="absolute left-1/2 top-4 h-8 w-1 -translate-x-1/2 rounded-full bg-neutral-600" />
                     <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-800 bg-neutral-950/80" />
                   </div>
                   <div className="absolute h-5 w-5 rounded-full border border-neutral-700 bg-neutral-950" />
                 </div>
-
                 <button
                   onClick={() => void playTrack(featuredTrack)}
                   className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white text-black transition-all duration-300 ease-out hover:scale-105"
-                  aria-label={
-                    isPlaying && currentTrack.name === featuredTrack.name
-                      ? "Pause featured track"
-                      : "Play featured track"
-                  }
                 >
-                  {isPlaying && currentTrack.name === featuredTrack.name ? (
-                    <div className="flex gap-1">
-                      <span className="h-4 w-1.5 rounded-sm bg-black" />
-                      <span className="h-4 w-1.5 rounded-sm bg-black" />
-                    </div>
-                  ) : (
-                    <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-black" />
-                  )}
+                  {isPlaying && currentTrack.name === featuredTrack.name
+                    ? <div className="flex gap-1"><span className="h-4 w-1.5 rounded-sm bg-black" /><span className="h-4 w-1.5 rounded-sm bg-black" /></div>
+                    : <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-y-transparent border-l-black" />}
                 </button>
               </div>
-
-              <div className="mt-5 flex items-start justify-between gap-4">
-                <div className="w-full">
-                  <h4 className="text-lg font-medium">
-                    LOVE 162 D MAJ @JOESKI7
-                  </h4>
-                  <ProgressBar track={featuredTrack} />
-                </div>
+              <div className="mt-5 w-full">
+                <h4 className="text-lg font-medium">LOVE 162 D MAJ @JOESKI7</h4>
+                <ProgressBar track={featuredTrack} isActive={currentTrack.name === featuredTrack.name} />
               </div>
             </div>
           </div>
         </section>
 
+        {/* Track list */}
         <section id="music" className="py-8">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-                Selected works
-              </p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Music
-              </h3>
+              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Selected works</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Music</h3>
             </div>
           </div>
-
           <div className="space-y-4">
             {musicSlots.map((track, index) => {
-              const isComingSoon = track.comingSoon;
+              const isComingSoon = !!track.comingSoon;
               const isActive = currentTrack.name === track.name;
-
               return (
-                <div
-                  key={`${track.name}-${index}`}
-                  className="grid gap-5 rounded-[1.75rem] border border-neutral-800 bg-neutral-900/40 p-5 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60 sm:grid-cols-[1.2fr_2fr_auto] sm:items-center"
-                >
+                <div key={`${track.name}-${index}`} className="grid gap-5 rounded-[1.75rem] border border-neutral-800 bg-neutral-900/40 p-5 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60 sm:grid-cols-[1.2fr_2fr_auto] sm:items-center">
                   <div>
                     <p className="text-sm text-neutral-500">Beat · 2026</p>
                     <h4 className="mt-1 text-xl font-medium">{track.name}</h4>
                   </div>
-
                   <div>
-                    <p className="text-sm leading-6 text-neutral-400">
-                      {track.description}
-                    </p>
-                    <ProgressBar track={track} />
+                    <p className="text-sm leading-6 text-neutral-400">{track.description}</p>
+                    <ProgressBar track={track} isActive={isActive} />
                   </div>
-
                   <div className="flex items-center gap-4 sm:justify-end">
                     <span className="text-sm text-neutral-500">
-                      {isActive && duration
-                        ? formatTime(duration)
-                        : isComingSoon
-                        ? "--:--"
-                        : "MP3"}
+                      {isActive && duration ? formatTime(duration) : isComingSoon ? "--:--" : "MP3"}
                     </span>
-
                     <button
-                      onClick={() => {
-                        if (!isComingSoon) {
-                          void playTrack(track);
-                        }
-                      }}
+                      onClick={() => { if (!isComingSoon) void playTrack(track); }}
                       className="rounded-full border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition-all duration-300 ease-out hover:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={isComingSoon}
                     >
-                      {isComingSoon
-                        ? "Soon"
-                        : isPlaying && isActive
-                        ? "Pause"
-                        : "Listen"}
+                      {isComingSoon ? "Soon" : isPlaying && isActive ? "Pause" : "Listen"}
                     </button>
                   </div>
                 </div>
@@ -536,71 +300,36 @@ export default function MusicPortfolioSite() {
           </div>
         </section>
 
+        {/* Archive */}
         <section id="about" className="py-16">
           <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
             <div className="flex flex-col gap-6 border-b border-neutral-800 pb-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-                  Archive
-                </p>
-                <h3 className="mt-3 text-2xl font-semibold tracking-tight">
-                  Releases
-                </h3>
+                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Archive</p>
+                <h3 className="mt-3 text-2xl font-semibold tracking-tight">Releases</h3>
               </div>
-
               <div className="grid gap-3 text-sm text-neutral-400 sm:grid-cols-3">
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">
-                  Purchasing available
-                </div>
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">
-                  Custom production
-                </div>
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">
-                  Collabs open
-                </div>
+                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Purchasing available</div>
+                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Custom production</div>
+                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Collabs open</div>
               </div>
             </div>
-
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {allTracks.slice(0, 4).map((release) => (
-                <div
-                  key={`${release.name}-bottom`}
-                  className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60"
-                >
+                <div key={`${release.name}-bottom`} className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60">
                   <div className="relative flex h-40 w-40 items-center justify-center">
-                    <div
-                      className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${
-                        isPlaying && currentTrack.name === release.name
-                          ? "animate-spin [animation-duration:8s]"
-                          : ""
-                      }`}
-                    />
-
+                    <div className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${isPlaying && currentTrack.name === release.name ? "animate-spin [animation-duration:8s]" : ""}`} />
                     <div className="absolute h-28 w-28 rounded-full border border-neutral-800 bg-neutral-900" />
-                    <div className="absolute h-4 w-4 rounded-full bg-neutral-950 border border-neutral-700" />
-
-                    <button
-                      onClick={() => void playTrack(release)}
-                      className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-all duration-300 ease-out group-hover:scale-105"
-                      aria-label={`Play ${release.name}`}
-                    >
-                      {isPlaying && currentTrack.name === release.name ? (
-                        <div className="flex gap-1">
-                          <span className="h-4 w-1.5 rounded-sm bg-black" />
-                          <span className="h-4 w-1.5 rounded-sm bg-black" />
-                        </div>
-                      ) : (
-                        <div className="ml-1 h-0 w-0 border-y-[8px] border-l-[12px] border-y-transparent border-l-black" />
-                      )}
+                    <div className="absolute h-4 w-4 rounded-full border border-neutral-700 bg-neutral-950" />
+                    <button onClick={() => void playTrack(release)} className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-all duration-300 ease-out group-hover:scale-105">
+                      {isPlaying && currentTrack.name === release.name
+                        ? <div className="flex gap-1"><span className="h-4 w-1.5 rounded-sm bg-black" /><span className="h-4 w-1.5 rounded-sm bg-black" /></div>
+                        : <div className="ml-1 h-0 w-0 border-y-[8px] border-l-[12px] border-y-transparent border-l-black" />}
                     </button>
                   </div>
-
-                  <h4 className="mt-5 text-center text-base font-medium">
-                    {release.name}
-                  </h4>
-
+                  <h4 className="mt-5 text-center text-base font-medium">{release.name}</h4>
                   <div className="w-full">
-                    <ProgressBar track={release} />
+                    <ProgressBar track={release} isActive={currentTrack.name === release.name} />
                   </div>
                 </div>
               ))}
@@ -608,52 +337,18 @@ export default function MusicPortfolioSite() {
           </div>
         </section>
 
+        {/* Contact */}
         <section id="contact" className="border-t border-neutral-800 py-10">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-                Contact
-              </p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-                For collaborations, purchasing, or producing
-              </h3>
-              <p className="mt-4 text-sm text-neutral-400">
-                Credits to @Smileralt on discord — DM for any inquiries
-              </p>
+              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Contact</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">For collaborations, purchasing, or producing</h3>
+              <p className="mt-4 text-sm text-neutral-400">Credits to @Smileralt on discord — DM for any inquiries</p>
             </div>
-
             <div className="space-y-3 text-sm text-neutral-400">
-              <p>
-                <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=prodjoeski@gmail.com&su=Beat%20Purchase&body=Hi%20Joeski,%20I%27m%20interested%20in%20buying%20a%20beat."
-                  className="transition hover:text-white"
-                >
-                  Email — prodjoeski@gmail.com
-                </a>
-              </p>
-
-              <p>
-                <a
-                  href="https://instagram.com/prod.joeski"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition hover:text-white"
-                >
-                  Instagram — @prod.joeski
-                </a>
-              </p>
-
-              <p>
-                <a
-                  href="https://youtube.com/@prodjoeski"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition hover:text-white"
-                >
-                  YouTube — @prodjoeski
-                </a>
-              </p>
-
+              <p><a href="https://mail.google.com/mail/?view=cm&fs=1&to=prodjoeski@gmail.com&su=Beat%20Purchase&body=Hi%20Joeski,%20I%27m%20interested%20in%20buying%20a%20beat." className="transition hover:text-white">Email — prodjoeski@gmail.com</a></p>
+              <p><a href="https://instagram.com/prod.joeski" target="_blank" rel="noreferrer" className="transition hover:text-white">Instagram — @prod.joeski</a></p>
+              <p><a href="https://youtube.com/@prodjoeski" target="_blank" rel="noreferrer" className="transition hover:text-white">YouTube — @prodjoeski</a></p>
               <p>Discord — joeski7</p>
             </div>
           </div>
