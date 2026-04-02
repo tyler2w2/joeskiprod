@@ -90,6 +90,8 @@ export default function MusicPortfolioSite() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [scrubTime, setScrubTime] = useState(0);
 
   const formatTime = (time: number): string => {
     if (!Number.isFinite(time) || time <= 0) return "0:00";
@@ -144,6 +146,7 @@ export default function MusicPortfolioSite() {
 
   const ProgressBar = ({ track }: { track: Track }) => {
     const isActive = currentTrack.name === track.name;
+    const displayTime = isActive ? (isScrubbing ? scrubTime : currentTime) : 0;
 
     return (
       <div className="mt-4 w-full">
@@ -151,19 +154,42 @@ export default function MusicPortfolioSite() {
           type="range"
           min={0}
           max={duration || 0}
-          step="any"
-          value={isActive ? currentTime : 0}
-          onInput={(e) => {
+          step="0.01"
+          value={displayTime}
+          onMouseDown={() => {
+            if (!isActive || !duration) return;
+            setIsScrubbing(true);
+            setScrubTime(currentTime);
+          }}
+          onTouchStart={() => {
+            if (!isActive || !duration) return;
+            setIsScrubbing(true);
+            setScrubTime(currentTime);
+          }}
+          onChange={(e) => {
+            if (!isActive || !audioRef.current) return;
+            const nextTime = Number(e.target.value);
+            setScrubTime(nextTime);
+          }}
+          onMouseUp={(e) => {
             if (!isActive || !audioRef.current) return;
             const nextTime = Number((e.target as HTMLInputElement).value);
             audioRef.current.currentTime = nextTime;
             setCurrentTime(nextTime);
+            setScrubTime(nextTime);
+            setIsScrubbing(false);
           }}
-          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-neutral-800 accent-white opacity-95 transition-all duration-200 hover:opacity-100 [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-neutral-800 [&::-webkit-slider-thumb]:-mt-1.5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-neutral-800 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white"
+          onTouchEnd={() => {
+            if (!isActive || !audioRef.current) return;
+            audioRef.current.currentTime = scrubTime;
+            setCurrentTime(scrubTime);
+            setIsScrubbing(false);
+          }}
+          className="yt-slider h-2 w-full cursor-pointer appearance-none rounded-full bg-neutral-800"
           disabled={!isActive || !duration}
         />
         <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-          <span>{isActive ? formatTime(currentTime) : "0:00"}</span>
+          <span>{isActive ? formatTime(displayTime) : "0:00"}</span>
           <span>{isActive && duration ? formatTime(duration) : "--:--"}</span>
         </div>
       </div>
@@ -172,11 +198,49 @@ export default function MusicPortfolioSite() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      <style jsx global>{`
+        .yt-slider::-webkit-slider-runnable-track {
+          height: 6px;
+          border-radius: 9999px;
+          background: linear-gradient(to right, #ffffff 0%, #ffffff var(--progress, 0%), #262626 var(--progress, 0%), #262626 100%);
+        }
+        .yt-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 14px;
+          height: 14px;
+          border-radius: 9999px;
+          background: #ffffff;
+          margin-top: -4px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+        }
+        .yt-slider::-moz-range-track {
+          height: 6px;
+          border-radius: 9999px;
+          background: #262626;
+        }
+        .yt-slider::-moz-range-progress {
+          height: 6px;
+          border-radius: 9999px;
+          background: #ffffff;
+        }
+        .yt-slider::-moz-range-thumb {
+          width: 14px;
+          height: 14px;
+          border: 0;
+          border-radius: 9999px;
+          background: #ffffff;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+        }
+      `}</style>
       <audio
         ref={audioRef}
         preload="metadata"
         src={featuredTrack.src}
-        onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime || 0)}
+        onTimeUpdate={(e) => {
+          if (isScrubbing) return;
+          setCurrentTime(e.currentTarget.currentTime || 0);
+        }}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onEnded={() => setIsPlaying(false)}
         onPause={() => setIsPlaying(false)}
