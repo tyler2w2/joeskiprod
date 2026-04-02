@@ -25,9 +25,7 @@ export default function MusicPortfolioSite() {
       {
         name: "@prod.joeski @prod.fxckmedia 148 emin star",
         description: "Contact me to buy.",
-        src: "/" + encodeURIComponent(
-          "@prod.joeski @prod.fxckmedia 148 emin star.mp3"
-        ),
+        src: "/" + encodeURIComponent("@prod.joeski @prod.fxckmedia 148 emin star.mp3"),
       },
       {
         name: "156 cmaj @joeski7 (1)",
@@ -74,8 +72,7 @@ export default function MusicPortfolioSite() {
   );
 
   const featuredTrack =
-    allTracks.find((track) => track.name === "LOVE 162 D MAJ @JOESKI7") ||
-    allTracks[0];
+    allTracks.find((track) => track.name === "LOVE 162 D MAJ @JOESKI7") || allTracks[0];
 
   const musicSlots: Track[] = [
     ...allTracks,
@@ -108,24 +105,29 @@ export default function MusicPortfolioSite() {
     return Math.min((currentTime / duration) * 100, 100);
   };
 
-  const playTrack = async (track: Track): Promise<void> => {
+  const playTrack = async (track: Track) => {
     const audio = audioRef.current;
     if (!audio || !track.src) return;
 
     const sameTrack = currentTrack.name === track.name;
 
-    try {
-      if (sameTrack) {
-        if (isPlaying) {
-          audio.pause();
-          setIsPlaying(false);
-        } else {
+    if (sameTrack) {
+      if (isPlaying) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        try {
           await audio.play();
           setIsPlaying(true);
+        } catch (error) {
+          console.error("Playback failed", error);
+          setIsPlaying(false);
         }
-        return;
       }
+      return;
+    }
 
+    try {
       audio.pause();
       audio.src = track.src;
       audio.load();
@@ -135,7 +137,7 @@ export default function MusicPortfolioSite() {
       await audio.play();
       setIsPlaying(true);
     } catch (error) {
-      console.error("Playback failed:", error);
+      console.error("Track switch failed", error);
       setIsPlaying(false);
     }
   };
@@ -149,15 +151,15 @@ export default function MusicPortfolioSite() {
           type="range"
           min={0}
           max={duration || 0}
-          step={0.1}
+          step="any"
           value={isActive ? currentTime : 0}
-          onChange={(e) => {
+          onInput={(e) => {
             if (!isActive || !audioRef.current) return;
-            const nextTime = Number(e.target.value);
+            const nextTime = Number((e.target as HTMLInputElement).value);
             audioRef.current.currentTime = nextTime;
             setCurrentTime(nextTime);
           }}
-          className="w-full cursor-pointer accent-white opacity-90 transition-all duration-300 hover:opacity-100"
+          className="h-2 w-full cursor-pointer appearance-none rounded-full bg-neutral-800 accent-white opacity-95 transition-all duration-200 hover:opacity-100 [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-neutral-800 [&::-webkit-slider-thumb]:-mt-1.5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-neutral-800 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-white"
           disabled={!isActive || !duration}
         />
         <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
@@ -189,40 +191,31 @@ export default function MusicPortfolioSite() {
       <div className="mx-auto flex max-w-6xl flex-col px-6 py-10 sm:px-8 lg:px-12">
         <header className="flex items-center justify-between border-b border-neutral-800 pb-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-              Music Portfolio
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-              joeski
-            </h1>
+            <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Music Portfolio</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">joeski</h1>
           </div>
           <nav className="hidden gap-6 text-sm text-neutral-400 md:flex">
-            <a href="#music" className="transition hover:text-white">
-              Music
-            </a>
-            <a href="#contact" className="transition hover:text-white">
-              Contact
-            </a>
+            <a href="#music" className="transition hover:text-white">Music</a>
+            <a href="#contact" className="transition hover:text-white">Contact</a>
           </nav>
         </header>
 
         <section className="grid gap-12 py-20 lg:grid-cols-[1.35fr_0.95fr] lg:items-end">
           <div>
-            <h2 className="max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl">
-              Joeski&apos;s music portfolio with all his best producers and
-              collabs
+            <h2 className="max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl"},{>
+              Joeski&apos;s music portfolio with all his best produces and collabs
             </h2>
 
             <div className="mt-8 flex flex-wrap gap-4">
               <a
                 href="#music"
-                className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition-all duration-300 ease-out hover:-translate-y-0.5 hover:opacity-90"
+                className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition-all duration-300 ease-out hover:opacity-90 hover:-translate-y-0.5"
               >
                 Explore music
               </a>
               <a
                 href="#contact"
-                className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-neutral-600 hover:bg-neutral-900/40"
+                className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition-all duration-300 ease-out hover:border-neutral-600 hover:bg-neutral-900/40 hover:-translate-y-0.5"
               >
                 Book / Contact
               </a>
@@ -232,9 +225,7 @@ export default function MusicPortfolioSite() {
           <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
-                  Featured
-                </p>
+                <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Featured</p>
                 <h3 className="mt-2 text-xl font-medium">Latest release</h3>
               </div>
               <span
@@ -244,19 +235,14 @@ export default function MusicPortfolioSite() {
                     : "border-neutral-700 text-neutral-400"
                 }`}
               >
-                {isPlaying && currentTrack.name === featuredTrack.name
-                  ? "playing"
-                  : "live"}
+                {isPlaying && currentTrack.name === featuredTrack.name ? "playing" : "live"}
               </span>
             </div>
-
             <div className="pt-5">
               <div className="relative flex aspect-square items-center justify-center rounded-[1.5rem] border border-neutral-800 bg-gradient-to-br from-neutral-800 to-neutral-950">
                 <div
                   className={`relative flex h-48 w-48 items-center justify-center rounded-full border border-neutral-700 bg-neutral-950/70 shadow-2xl shadow-black/30 ${
-                    isPlaying && currentTrack.name === featuredTrack.name
-                      ? "animate-spin [animation-duration:8s]"
-                      : ""
+                    isPlaying && currentTrack.name === featuredTrack.name ? "animate-spin [animation-duration:8s]" : ""
                   }`}
                 >
                   <div className="relative h-40 w-40 rounded-full border border-neutral-800 bg-neutral-900">
@@ -268,12 +254,8 @@ export default function MusicPortfolioSite() {
 
                 <button
                   onClick={() => void playTrack(featuredTrack)}
-                  className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white text-black transition-all duration-300 ease-out hover:scale-105"
-                  aria-label={
-                    isPlaying && currentTrack.name === featuredTrack.name
-                      ? "Pause featured track"
-                      : "Play featured track"
-                  }
+                  className="absolute flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-white text-black transition hover:scale-105"
+                  aria-label={isPlaying && currentTrack.name === featuredTrack.name ? "Pause featured track" : "Play featured track"}
                 >
                   {isPlaying && currentTrack.name === featuredTrack.name ? (
                     <div className="flex gap-1">
@@ -288,9 +270,7 @@ export default function MusicPortfolioSite() {
 
               <div className="mt-5 flex items-start justify-between gap-4">
                 <div className="w-full">
-                  <h4 className="text-lg font-medium">
-                    LOVE 162 D MAJ @JOESKI7
-                  </h4>
+                  <h4 className="text-lg font-medium">LOVE 162 D MAJ @JOESKI7</h4>
                   <ProgressBar track={featuredTrack} />
                 </div>
               </div>
@@ -301,12 +281,8 @@ export default function MusicPortfolioSite() {
         <section id="music" className="py-8">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-                Selected works
-              </p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Music
-              </h3>
+              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Selected works</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Music</h3>
             </div>
           </div>
 
@@ -326,19 +302,13 @@ export default function MusicPortfolioSite() {
                   </div>
 
                   <div>
-                    <p className="text-sm leading-6 text-neutral-400">
-                      {track.description}
-                    </p>
+                    <p className="text-sm leading-6 text-neutral-400">{track.description}</p>
                     <ProgressBar track={track} />
                   </div>
 
                   <div className="flex items-center gap-4 sm:justify-end">
                     <span className="text-sm text-neutral-500">
-                      {isActive && duration
-                        ? formatTime(duration)
-                        : isComingSoon
-                        ? "--:--"
-                        : "MP3"}
+                      {isActive && duration ? formatTime(duration) : isComingSoon ? "--:--" : "MP3"}
                     </span>
                     <button
                       onClick={() => {
@@ -346,14 +316,10 @@ export default function MusicPortfolioSite() {
                           void playTrack(track);
                         }
                       }}
-                      className="rounded-full border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition-all duration-300 ease-out hover:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-full border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={isComingSoon}
                     >
-                      {isComingSoon
-                        ? "Soon"
-                        : isPlaying && isActive
-                        ? "Pause"
-                        : "Listen"}
+                      {isComingSoon ? "Soon" : isPlaying && isActive ? "Pause" : "Listen"}
                     </button>
                   </div>
                 </div>
@@ -363,48 +329,36 @@ export default function MusicPortfolioSite() {
         </section>
 
         <section id="about" className="py-16">
-          <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
+          <div className="rounded-[2rem] border border-neutral-800 bg-neutral-900/40 p-6 sm:p-8">
             <div className="flex flex-col gap-6 border-b border-neutral-800 pb-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-                  Archive
-                </p>
-                <h3 className="mt-3 text-2xl font-semibold tracking-tight">
-                  Releases
-                </h3>
+                <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Archive</p>
+                <h3 className="mt-3 text-2xl font-semibold tracking-tight">Releases</h3>
               </div>
               <div className="grid gap-3 text-sm text-neutral-400 sm:grid-cols-3">
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">
-                  Purchasing available
-                </div>
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">
-                  Custom production
-                </div>
-                <div className="rounded-2xl border border-neutral-800 px-4 py-3">
-                  Collabs open
-                </div>
+                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Purchasing available</div>
+                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Custom production</div>
+                <div className="rounded-2xl border border-neutral-800 px-4 py-3">Collabs open</div>
               </div>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {allTracks.slice(0, 4).map((release) => (
                 <div
-                  key={`${release.name}-bottom`}
+                  key={release.name + "-bottom"}
                   className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60"
                 >
                   <div className="relative flex h-40 w-40 items-center justify-center">
                     <div
                       className={`absolute h-full w-full rounded-full border border-neutral-700 bg-gradient-to-br from-neutral-800 to-neutral-950 ${
-                        isPlaying && currentTrack.name === release.name
-                          ? "animate-spin [animation-duration:8s]"
-                          : ""
+                        isPlaying && currentTrack.name === release.name ? "animate-spin [animation-duration:8s]" : ""
                       }`}
                     />
                     <div className="absolute h-28 w-28 rounded-full border border-neutral-800 bg-neutral-900" />
-                    <div className="absolute h-4 w-4 rounded-full border border-neutral-700 bg-neutral-950" />
+                    <div className="absolute h-4 w-4 rounded-full bg-neutral-950 border border-neutral-700" />
                     <button
                       onClick={() => void playTrack(release)}
-                      className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-all duration-300 ease-out group-hover:scale-105"
+                      className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition group-hover:scale-105"
                       aria-label={`Play ${release.name}`}
                     >
                       {isPlaying && currentTrack.name === release.name ? (
@@ -417,9 +371,7 @@ export default function MusicPortfolioSite() {
                       )}
                     </button>
                   </div>
-                  <h4 className="mt-5 text-center text-base font-medium">
-                    {release.name}
-                  </h4>
+                  <h4 className="mt-5 text-base font-medium text-center">{release.name}</h4>
                   <div className="w-full">
                     <ProgressBar track={release} />
                   </div>
@@ -432,42 +384,26 @@ export default function MusicPortfolioSite() {
         <section id="contact" className="border-t border-neutral-800 py-10">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">
-                Contact
-              </p>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-                For collaborations, purchasing, or producing
-              </h3>
-              <p className="mt-4 text-sm text-neutral-400">
-                Credits to @Smileralt on discord — DM for any inquiries
-              </p>
+              <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Contact</p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">For collaborations, purchasing, or producing</h3>
+              <p className="mt-4 text-sm text-neutral-400">Credits to @Smileralt on discord — DM for any inquiries</p>
             </div>
             <div className="space-y-3 text-sm text-neutral-400">
               <p>
                 <a
                   href="https://mail.google.com/mail/?view=cm&fs=1&to=prodjoeski@gmail.com&su=Beat%20Purchase&body=Hi%20Joeski,%20I%27m%20interested%20in%20buying%20a%20beat."
-                  className="transition hover:text-white"
+                  className="hover:text-white transition"
                 >
                   Email — prodjoeski@gmail.com
                 </a>
               </p>
               <p>
-                <a
-                  href="https://instagram.com/prod.joeski"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition hover:text-white"
-                >
+                <a href="https://instagram.com/prod.joeski" target="_blank" rel="noreferrer" className="hover:text-white transition">
                   Instagram — @prod.joeski
                 </a>
               </p>
               <p>
-                <a
-                  href="https://youtube.com/@prodjoeski"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="transition hover:text-white"
-                >
+                <a href="https://youtube.com/@prodjoeski" target="_blank" rel="noreferrer" className="hover:text-white transition">
                   YouTube — @prodjoeski
                 </a>
               </p>
