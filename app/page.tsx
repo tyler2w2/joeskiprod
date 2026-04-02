@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Track = {
   name: string;
@@ -104,7 +104,9 @@ export default function Page() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isSeeking, setIsSeeking] = useState(false);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragTime, setDragTime] = useState(0);
 
   async function playTrack(track: Track) {
     const audio = audioRef.current;
@@ -117,9 +119,12 @@ export default function Page() {
         audio.pause();
         audio.src = track.src;
         audio.load();
+
         setCurrentTrack(track);
         setCurrentTime(0);
         setDuration(0);
+        setDragTime(0);
+
         await audio.play();
         setIsPlaying(true);
         return;
@@ -138,46 +143,81 @@ export default function Page() {
     }
   }
 
-  function handleSeek(value: number) {
+  function seekTo(time: number) {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.currentTime = value;
-    setCurrentTime(value);
+    audio.currentTime = time;
+    setCurrentTime(time);
+    setDragTime(time);
   }
 
   function ProgressBar({ track }: { track: Track }) {
+    const barRef = useRef<HTMLDivElement | null>(null);
     const active = currentTrack.name === track.name;
-    const value = active ? currentTime : 0;
     const max = active ? duration || 0 : 0;
-    const percent = active && max > 0 ? Math.min((value / max) * 100, 100) : 0;
+    const shownTime = active ? (isDragging ? dragTime : currentTime) : 0;
+    const percent = active && max > 0 ? Math.min((shownTime / max) * 100, 100) : 0;
+
+    const calculateTimeFromPointer = (clientX: number) => {
+      if (!barRef.current || max <= 0) return 0;
+      const rect = barRef.current.getBoundingClientRect();
+      const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+      const ratio = rect.width ? x / rect.width : 0;
+      return ratio * max;
+    };
+
+    const startDrag = (clientX: number) => {
+      if (!active || max <= 0) return;
+      const nextTime = calculateTimeFromPointer(clientX);
+      setIsDragging(true);
+      setDragTime(nextTime);
+    };
+
+    useEffect(() => {
+      if (!isDragging || !active) return;
+
+      const handlePointerMove = (e: PointerEvent) => {
+        const nextTime = calculateTimeFromPointer(e.clientX);
+        setDragTime(nextTime);
+      };
+
+      const handlePointerUp = () => {
+        seekTo(dragTime);
+        setIsDragging(false);
+      };
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+
+      return () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+      };
+    }, [isDragging, active, dragTime, max]);
 
     return (
       <div className="mt-3 w-full">
-        <input
-          type="range"
-          min={0}
-          max={max}
-          step="0.001"
-          value={value}
-          disabled={!active || !max}
-          onMouseDown={() => setIsSeeking(true)}
-          onMouseUp={(e) => {
-            setIsSeeking(false);
-            handleSeek(Number((e.target as HTMLInputElement).value));
-          }}
-          onTouchStart={() => setIsSeeking(true)}
-          onTouchEnd={(e) => {
-            setIsSeeking(false);
-            handleSeek(Number((e.target as HTMLInputElement).value));
-          }}
-          onChange={(e) => {
-            handleSeek(Number(e.target.value));
-          }}
-          className="yt-slider h-2 w-full cursor-pointer appearance-none rounded-full"
-          style={{ ["--progress" as string]: `${percent}%` }}
-        />
+        <div
+          ref={barRef}
+          onPointerDown={(e) => startDrag(e.clientX)}
+          className={`group relative h-2 w-full rounded-full ${
+            active && max > 0 ? "cursor-pointer" : "cursor-default"
+          } bg-neutral-800`}
+        >
+          <div
+            className="absolute left-0 top-0 h-full rounded-full bg-white transition-[width] duration-75"
+            style={{ width: `${percent}%` }}
+          />
+          {active && max > 0 ? (
+            <div
+              className="absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white shadow-[0_2px_12px_rgba(0,0,0,0.35)] transition-transform duration-75 group-hover:scale-110"
+              style={{ left: `calc(${percent}% - 8px)` }}
+            />
+          ) : null}
+        </div>
+
         <div className="mt-1 flex justify-between text-xs text-neutral-500">
-          <span>{active ? formatTime(value) : "0:00"}</span>
+          <span>{active ? formatTime(shownTime) : "0:00"}</span>
           <span>{active && max ? formatTime(max) : "--:--"}</span>
         </div>
       </div>
@@ -186,57 +226,12 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      <style jsx global>{`
-        .yt-slider {
-          background: transparent;
-        }
-        .yt-slider::-webkit-slider-runnable-track {
-          height: 6px;
-          border-radius: 9999px;
-          background: linear-gradient(
-            to right,
-            #ffffff 0%,
-            #ffffff var(--progress, 0%),
-            #2a2a2a var(--progress, 0%),
-            #2a2a2a 100%
-          );
-        }
-        .yt-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 14px;
-          height: 14px;
-          border-radius: 9999px;
-          background: #ffffff;
-          margin-top: -4px;
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-        }
-        .yt-slider::-moz-range-track {
-          height: 6px;
-          border-radius: 9999px;
-          background: #2a2a2a;
-        }
-        .yt-slider::-moz-range-progress {
-          height: 6px;
-          border-radius: 9999px;
-          background: #ffffff;
-        }
-        .yt-slider::-moz-range-thumb {
-          width: 14px;
-          height: 14px;
-          border: 0;
-          border-radius: 9999px;
-          background: #ffffff;
-          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-        }
-      `}</style>
-
       <audio
         ref={audioRef}
         preload="metadata"
         src={featuredTrack.src}
         onTimeUpdate={() => {
-          if (!audioRef.current || isSeeking) return;
+          if (!audioRef.current || isDragging) return;
           setCurrentTime(audioRef.current.currentTime || 0);
         }}
         onLoadedMetadata={() => {
