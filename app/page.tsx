@@ -63,11 +63,6 @@ export default function MusicPortfolioSite() {
         src: "/" + encodeURIComponent("LOVE 162 D MAJ @JOESKI7.mp3"),
       },
       {
-        name: "156 cmaj @joeski7",
-        description: "Contact me to buy.",
-        src: "/" + encodeURIComponent("156 cmaj @joeski7.mp3"),
-      },
-      {
         name: "OUIJA BOARD 156 @PROD.JOESKI",
         description: "Contact me to buy.",
         src: "/" + encodeURIComponent("OUIJA BOARD 156 @PROD.JOESKI.mp3"),
@@ -81,7 +76,7 @@ export default function MusicPortfolioSite() {
 
   const musicSlots: Track[] = [
     ...allTracks,
-    ...Array.from({ length: 8 }, () => ({
+    ...Array.from({ length: 9 }, () => ({
       name: "Coming Soon",
       description: "Coming soon.",
       src: "",
@@ -147,20 +142,33 @@ export default function MusicPortfolioSite() {
     }
   };
 
-  const ProgressBar = ({ track }: { track: Track }) => (
-    <div className="mt-4 w-full">
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
-        <div
-          className="h-full rounded-full bg-white transition-all duration-300"
-          style={{ width: `${progressFor(track)}%` }}
+  const ProgressBar = ({ track }: { track: Track }) => {
+    const isActive = currentTrack.name === track.name;
+
+    return (
+      <div className="mt-4 w-full">
+        <input
+          type="range"
+          min={0}
+          max={duration || 0}
+          step={0.1}
+          value={isActive ? currentTime : 0}
+          onChange={(e) => {
+            if (!isActive || !audioRef.current) return;
+            const nextTime = Number(e.target.value);
+            audioRef.current.currentTime = nextTime;
+            setCurrentTime(nextTime);
+          }}
+          className="w-full cursor-pointer accent-white opacity-90 transition-all duration-300 hover:opacity-100"
+          disabled={!isActive || !duration}
         />
+        <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
+          <span>{isActive ? formatTime(currentTime) : "0:00"}</span>
+          <span>{isActive && duration ? formatTime(duration) : "--:--"}</span>
+        </div>
       </div>
-      <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-        <span>{currentTrack.name === track.name ? formatTime(currentTime) : "0:00"}</span>
-        <span>{currentTrack.name === track.name && duration ? formatTime(duration) : "--:--"}</span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100">
@@ -180,7 +188,7 @@ export default function MusicPortfolioSite() {
         }}
       />
 
-      <div className="mx-auto flex max-w-6xl flex-col px-6 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto flex max-w-6xl flex-col px-6 py-10 sm:px-8 lg:px-12">
         <header className="flex items-center justify-between border-b border-neutral-800 pb-6">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-neutral-500">Music Portfolio</p>
@@ -192,29 +200,29 @@ export default function MusicPortfolioSite() {
           </nav>
         </header>
 
-        <section className="grid gap-10 py-16 lg:grid-cols-[1.4fr_0.9fr] lg:items-end">
+        <section className="grid gap-12 py-20 lg:grid-cols-[1.35fr_0.95fr] lg:items-end">
           <div>
-            <h2 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
+            <h2 className="max-w-3xl text-4xl font-semibold leading-[0.95] tracking-tight sm:text-6xl"},{>
               Joeski&apos;s music portfolio with all his best produces and collabs
             </h2>
 
             <div className="mt-8 flex flex-wrap gap-4">
               <a
                 href="#music"
-                className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
+                className="rounded-2xl border border-neutral-700 bg-white px-5 py-3 text-sm font-medium text-black transition-all duration-300 ease-out hover:opacity-90 hover:-translate-y-0.5"
               >
                 Explore music
               </a>
               <a
                 href="#contact"
-                className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition hover:border-neutral-600"
+                className="rounded-2xl border border-neutral-800 px-5 py-3 text-sm font-medium text-neutral-200 transition-all duration-300 ease-out hover:border-neutral-600 hover:bg-neutral-900/40 hover:-translate-y-0.5"
               >
                 Book / Contact
               </a>
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-neutral-800 bg-neutral-900/60 p-5 shadow-2xl shadow-black/20 backdrop-blur">
+          <div className="rounded-[2rem] border border-neutral-800/80 bg-neutral-900/50 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">Featured</p>
@@ -286,7 +294,7 @@ export default function MusicPortfolioSite() {
               return (
                 <div
                   key={`${track.name}-${index}`}
-                  className="grid gap-5 rounded-[1.75rem] border border-neutral-800 bg-neutral-900/40 p-5 transition hover:border-neutral-700 sm:grid-cols-[1.2fr_2fr_auto] sm:items-center"
+                  className="grid gap-5 rounded-[1.75rem] border border-neutral-800 bg-neutral-900/40 p-5 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60 sm:grid-cols-[1.2fr_2fr_auto] sm:items-center"
                 >
                   <div>
                     <p className="text-sm text-neutral-500">Beat · 2026</p>
@@ -338,7 +346,7 @@ export default function MusicPortfolioSite() {
               {allTracks.slice(0, 4).map((release) => (
                 <div
                   key={release.name + "-bottom"}
-                  className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition hover:border-neutral-700"
+                  className="group relative flex flex-col items-center justify-center rounded-[1.75rem] border border-neutral-800 p-6 transition-all duration-300 ease-out hover:border-neutral-700 hover:bg-neutral-900/60"
                 >
                   <div className="relative flex h-40 w-40 items-center justify-center">
                     <div
@@ -399,6 +407,7 @@ export default function MusicPortfolioSite() {
                   YouTube — @prodjoeski
                 </a>
               </p>
+              <p>Discord — joeski7</p>
             </div>
           </div>
         </section>
