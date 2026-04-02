@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Track = {
   name: string;
@@ -88,13 +88,20 @@ export default function MusicPortfolioSite() {
   ];
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
   const [currentTrack, setCurrentTrack] = useState<Track>(featuredTrack);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
+  // duration is still React state since it only changes on track load
   const [duration, setDuration] = useState(0);
-  const [isScrubbing, setIsScrubbing] = useState(false);
-  const [scrubTime, setScrubTime] = useState(0);
+
+  // Ref map: trackName -> { slider, currentTimeEl }
+  const sliderRefs = useRef<
+    Map<string, { slider: HTMLInputElement; currentTimeEl: HTMLSpanElement }>
+  >(new Map());
+
+  const currentTrackRef = useRef(currentTrack);
+  currentTrackRef.current = currentTrack;
+  const durationRef = useRef(duration);
+  durationRef.current = duration;
 
   const formatTime = (time: number): string => {
     if (!Number.isFinite(time) || time <= 0) return "0:00";
@@ -105,79 +112,173 @@ export default function MusicPortfolioSite() {
     return `${minutes}:${seconds}`;
   };
 
+  // Update slider + time label directly on the DOM — no React re-render needed
+  const updateSliderDOM = useCallback(
+    (trackName: string, time: number, dur: number) => {
+      const refs = sliderRefs.current.get(trackName);
+      if (!refs) return;
+      const { slider, currentTimeEl } = refs;
+      const percent = dur > 0 ? Math.min((time / dur) * 100, 100) : 0;
+      slider.value = String(time);
+      slider.max = String(dur);
+      slider.style.setProperty("--progress", `${percent}%`);
+      currentTimeEl.textContent = formatTime(time);
+    },
+    []
+  );
+
+  // On timeupdate: push progress directly to DOM, skip React state entirely
+  const handleTimeUpdate = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const time = audio.currentTime;
+    const dur = durationRef.current;
+    updateSliderDOM(currentTrackRef.current.name, time, dur);
+  }, [updateSliderDOM]);
+
+  // When a new track loads, set the slider max and reset it
+  const handleLoadedMetadata = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const dur = audio.duration || 0;
+    setDuration(dur);
+    durationRef.current = dur;
+    const refs = sliderRefs.current.get(currentTrackRef.current.name);
+    if (refs) {
+      refs.slider.max = String(dur);
+      refs.slider.value = "0";
+      refs.slider.style.setProperty("--progress", "0%");
+    }
+  }, []);
+
   const playTrack = async (track: Track): Promise<void> => {
     const audio = audioRef.current;
     if (!audio || !track.src) return;
 
-    const sameTrack = currentTrack.name === track.name;
+    const sameTrack = currentTrackRef.current.name === track.name;
 
     try {
       if (sameTrack) {
         if (isPlaying) {
           audio.pause();
-          setIsPlaying(false);
         } else {
           await audio.play();
-          setIsPlaying(true);
         }
         return;
       }
 
       audio.pause();
+      // Reset old track's slider
+      updateSliderDOM(currentTrackRef.current.name, 0, 0);
+      const oldRefs = sliderRefs.current.get(currentTrackRef.current.name);
+      if (oldRefs) {
+        oldRefs.slider.max = "0";
+        oldRefs.slider.value = "0";
+        oldRefs.slider.style.setProperty("--progress", "0%");
+        oldRefs.currentTimeEl.textContent = "0:00";
+      }
+
       audio.src = track.src;
       audio.load();
       setCurrentTrack(track);
-      setCurrentTime(0);
       setDuration(0);
-      setScrubTime(0);
+      durationRef.current = 0;
       await audio.play();
-      setIsPlaying(true);
     } catch (error) {
       console.error("Playback failed:", error);
       setIsPlaying(false);
     }
   };
 
+  // Register a slider+timeEl pair for a track
+  const registerSlider = useCallback(
+    (
+      trackName: string,
+      slider: HTMLInputElement | null,
+      currentTimeEl: HTMLSpanElement | null
+    ) => {
+      if (slider && currentTimeEl) {
+        sliderRefs.current.set(trackName, { slider, currentTimeEl });
+      } else {
+        sliderRefs.current.delete(trackName);
+      }
+    },
+    []
+  );
+
   const ProgressBar = ({ track }: { track: Track }) => {
     const isActive = currentTrack.name === track.name;
-    const value = isActive ? (isScrubbing ? scrubTime : currentTime) : 0;
-    const percent =
-      isActive && duration > 0 ? Math.min((value / duration) * 100, 100) : 0;
+
+    const sliderRef = useCallback(
+      (el: HTMLInputElement | null) => {
+        const map = sliderRefs.current;
+        const existing = map.get(track.name);
+        if (el) {
+          map.set(track.name, {
+            slider: el,
+            currentTimeEl: existing?.currentTimeEl as HTMLSpanElement,
+          });
+        }
+      },
+      [track.name]
+    );
+
+    const timeRef = useCallback(
+      (el: HTMLSpanElement | null) => {
+        const map = sliderRefs.current;
+        const existing = map.get(track.name);
+        if (el) {
+          map.set(track.name, {
+            slider: existing?.slider as HTMLInputElement,
+            currentTimeEl: el,
+          });
+        }
+      },
+      [track.name]
+    );
 
     return (
       <div className="mt-4 w-full">
         <input
+          ref={sliderRef}
           type="range"
           min={0}
-          max={duration || 0}
+          max={isActive ? duration : 0}
           step="0.001"
-          value={value}
+          defaultValue={0}
           onMouseDown={() => {
-            if (!isActive || !duration) return;
-            setIsScrubbing(true);
-            setScrubTime(currentTime);
+            if (!isActive || !audioRef.current) return;
+            audioRef.current.pause();
           }}
           onTouchStart={() => {
-            if (!isActive || !duration) return;
-            setIsScrubbing(true);
-            setScrubTime(currentTime);
+            if (!isActive || !audioRef.current) return;
+            audioRef.current.pause();
           }}
           onChange={(e) => {
             if (!isActive || !audioRef.current) return;
             const nextTime = Number(e.target.value);
-            setScrubTime(nextTime);
-            setCurrentTime(nextTime);
+            const dur = durationRef.current;
+            const percent = dur > 0 ? Math.min((nextTime / dur) * 100, 100) : 0;
+            e.target.style.setProperty("--progress", `${percent}%`);
             audioRef.current.currentTime = nextTime;
+            const refs = sliderRefs.current.get(track.name);
+            if (refs) refs.currentTimeEl.textContent = formatTime(nextTime);
           }}
-          onMouseUp={() => setIsScrubbing(false)}
-          onTouchEnd={() => setIsScrubbing(false)}
+          onMouseUp={async () => {
+            if (!isActive || !audioRef.current) return;
+            await audioRef.current.play();
+          }}
+          onTouchEnd={async () => {
+            if (!isActive || !audioRef.current) return;
+            await audioRef.current.play();
+          }}
           className="yt-slider h-2 w-full cursor-pointer appearance-none rounded-full"
-          style={{ ["--progress" as string]: `${percent}%` }}
+          style={{ ["--progress" as string]: "0%" }}
           disabled={!isActive || !duration}
         />
 
         <div className="mt-2 flex items-center justify-between text-xs text-neutral-500">
-          <span>{isActive ? formatTime(value) : "0:00"}</span>
+          <span ref={timeRef}>0:00</span>
           <span>{isActive && duration ? formatTime(duration) : "--:--"}</span>
         </div>
       </div>
@@ -245,19 +346,14 @@ export default function MusicPortfolioSite() {
         ref={audioRef}
         preload="metadata"
         src={featuredTrack.src}
-        onTimeUpdate={(e) => {
-          if (isScrubbing) return;
-          setCurrentTime(e.currentTarget.currentTime || 0);
-        }}
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => setIsPlaying(false)}
         onPause={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
         onError={() => {
           setIsPlaying(false);
-          setCurrentTime(0);
           setDuration(0);
-          setScrubTime(0);
         }}
       />
 
