@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { put } from "@vercel/blob";
+import { kv } from "@vercel/kv";
 
-const TRACKS_FILE = path.join(process.cwd(), "data", "tracks.json");
+const KV_KEY = "tracks";
 
-function readTracks() {
-  if (!fs.existsSync(TRACKS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(TRACKS_FILE, "utf-8"));
-}
+type Track = { name: string; description: string; src: string };
 
-function writeTracks(tracks: unknown[]) {
-  fs.writeFileSync(TRACKS_FILE, JSON.stringify(tracks, null, 2));
+async function readTracks(): Promise<Track[]> {
+  const tracks = await kv.get<Track[]>(KV_KEY);
+  return tracks ?? [];
 }
 
 export async function POST(req: NextRequest) {
@@ -32,20 +30,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Only MP3 files are allowed" }, { status: 400 });
   }
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  const fileName = file.name;
-  const publicDir = path.join(process.cwd(), "public");
-  const filePath = path.join(publicDir, fileName);
-  fs.writeFileSync(filePath, buffer);
+  // Upload to Vercel Blob - persists permanently
+  const blob = await put(file.name, file, {
+    access: "public",
+    contentType: "audio/mpeg",
+  });
 
-  const src = `/${encodeURIComponent(fileName)}`;
-  const newTrack = { name: trackName, description, src };
+  const newTrack: Track = { name: trackName, description, src: blob.url };
 
-  const tracks = readTracks();
-  // Remove any existing track with the same name
-  const filtered = tracks.filter((t: { name: string }) => t.name !== trackName);
-  writeTracks([newTrack, ...filtered]);
+  // Save track list to KV - persists permanently
+  const tracks = await readTracks();
+  const filtered = tracks.filter((t) => t.name !== trackName);
+  await kv.set(KV_KEY, [newTrack, ...filtered]);
 
   return NextResponse.json({ success: true, track: newTrack });
 }
