@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { kv } from "@vercel/kv";
 
-const TRACKS_FILE = path.join(process.cwd(), "data", "tracks.json");
+const KV_KEY = "tracks";
 
-function readTracks() {
-  if (!fs.existsSync(TRACKS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(TRACKS_FILE, "utf-8"));
-}
+type Track = { name: string; description: string; src: string };
 
-function writeTracks(tracks: unknown[]) {
-  fs.writeFileSync(TRACKS_FILE, JSON.stringify(tracks, null, 2));
+async function readTracks(): Promise<Track[]> {
+  const tracks = await kv.get<Track[]>(KV_KEY);
+  return tracks ?? [];
 }
 
 export async function GET() {
-  return NextResponse.json(readTracks());
+  const tracks = await readTracks();
+  return NextResponse.json(tracks);
 }
 
 export async function DELETE(req: NextRequest) {
@@ -22,9 +20,8 @@ export async function DELETE(req: NextRequest) {
   if (passkey !== process.env.ADMIN_PASSKEY) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const tracks = readTracks();
-  const updated = tracks.filter((t: { name: string }) => t.name !== name);
-  writeTracks(updated);
+  const tracks = await readTracks();
+  await kv.set(KV_KEY, tracks.filter((t) => t.name !== name));
   return NextResponse.json({ success: true });
 }
 
@@ -33,6 +30,6 @@ export async function PUT(req: NextRequest) {
   if (passkey !== process.env.ADMIN_PASSKEY) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  writeTracks(tracks);
+  await kv.set(KV_KEY, tracks);
   return NextResponse.json({ success: true });
 }
