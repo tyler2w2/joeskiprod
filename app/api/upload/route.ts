@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from "next/server";
+import { put } from "@vercel/blob";
+import { Redis } from "@upstash/redis";
+
+const redis = Redis.fromEnv();
+const KV_KEY = "tracks";
+
+type Track = { name: string; description: string; src: string; price?: string; buyLink?: string; featured?: boolean; comingSoon?: boolean };
+
+async function readTracks(): Promise<Track[]> {
+  const tracks = await redis.get<Track[]>(KV_KEY);
+  return tracks ?? [];
+}
+
+export async function POST(req: NextRequest) {
+  const passkey = req.headers.get("x-passkey");
+  if (passkey !== process.env.ADMIN_PASSKEY) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const formData = await req.formData();
+  const file = formData.get("file") as File;
+  const trackName = formData.get("name") as string;
+  const price = formData.get("price") as string | null;
+  const buyLink = formData.get("buyLink") as string | null;
+
+  if (!file || !trackName) return NextResponse.json({ error: "Missing file or name" }, { status: 400 });
+  if (!file.name.toLowerCase().endsWith(".mp3")) return NextResponse.json({ error: "Only MP3 files are allowed" }, { status: 400 });
+
+  const blob = await put(file.name, file, { access: "public", contentType: "audio/mpeg" });
+
+  const newTrack: Track = {
+    name: trackName,
+    description: "",
+    src: blob.url,
+    ...(price ? { price } : {}),
+    ...(buyLink ? { buyLink } : {}),
+  };
+
+  const tracks = await readTracks();
+  const filtered = tracks.filter((t) => t.name !== trackName);
+  await redis.set(KV_KEY, [newTrack, ...filtered]);
+
+  return NextResponse.json({ success: true, track: newTrack });
+}
