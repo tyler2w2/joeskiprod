@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest) {
   const tracks = await readTracks();
 
   // If setting featured, unset all others first
-  let updated = tracks.map((t) => {
+  const updated = tracks.map((t) => {
     if (updates.featured !== undefined) {
       return t.name === name ? { ...t, ...updates } : { ...t, featured: false };
     }
